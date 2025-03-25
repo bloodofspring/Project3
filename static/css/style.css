@@ -1,0 +1,24 @@
+h1 {
+    color: #d22e3a;
+}
+
+#form_mars {
+    margin-left: auto;
+    matgin-right: auto;
+    max-width: 450px;
+    background-color: #FFDAB9;
+    border: 1px solid gray;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+h4.my-h4 {
+    color: #cccccc;
+    padding: 20px;
+}
+
+h2#mission {
+    padding-left: 160px;
+    background: url(/static/img/mission_small.png) no-repeat;
+    min-height: 50px;
+}
