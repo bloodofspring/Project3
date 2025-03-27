@@ -1,3 +1,6 @@
+import os
+
+from dotenv import load_dotenv
 from flask import Flask, render_template  # , redirect
 
 from database.create import init_db
@@ -6,8 +9,10 @@ from database.create import init_db
 
 # from forms.job_form import JobForm
 
+load_dotenv()
+
 application = Flask(__name__)
-application.config['SECRET_KEY'] = 'SFgjr35q6#$%n^$n7>z'
+application.config['SECRET_KEY'] = os.environ["app_secret_key"]
 
 # login_manager = LoginManager()
 # login_manager.init_app(application)
