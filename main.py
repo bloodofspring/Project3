@@ -26,7 +26,7 @@ application.config['SECRET_KEY'] = os.environ["app_secret_key"]
 
 @application.route("/")
 def index():
-    return render_template("testForm.html")
+    return render_template("index.html")
 
 
 @application.route("/main")
