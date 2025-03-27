@@ -29,6 +29,11 @@ def index():
     return render_template("testForm.html")
 
 
+@application.route("/main")
+def main_page():
+    return render_template("main.html")
+
+
 # Пока что закомментирую (так сказать, до лучших времен)
 # @application.route('/login', methods=['GET', 'POST'])
 # def login():
