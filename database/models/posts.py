@@ -9,9 +9,11 @@ class Post(BaseModel):
     author = ForeignKeyField(AppUser, backref="posts", null=False)
     text = CharField(null=False)
 
+
 class PostsToMedia(BaseModel):
     post = ForeignKeyField(Post, backref="media_rel", null=False)
     media = ForeignKeyField(FileMeta, backref="post_rel", null=False)
+
 
 class Comments(BaseModel):
     author = ForeignKeyField(AppUser, backref="posts", null=False)

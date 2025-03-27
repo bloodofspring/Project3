@@ -13,6 +13,7 @@ class UserProfile(BaseModel):
     profile_picture = ForeignKeyField(FileMeta, backref="profile_pictures", null=True, default=None)
     birth_date = DateTimeField(null=True, default=None)
 
+
 class AppUser(BaseModel):
     email = CharField(null=False, max_length=128)
     login = CharField(null=False, max_length=32)
