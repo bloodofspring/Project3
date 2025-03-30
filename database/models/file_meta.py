@@ -15,3 +15,6 @@ class FileMeta(BaseModel):
     filename = CharField(default=generate_string, null=False)
     extension = CharField(null=False)
     size = BigIntegerField(null=False)
+
+    def get_full_path(self):
+        return self.path + "/" + self.filename + "." + self.extension
