@@ -31,7 +31,14 @@ def index():
 
 @application.route("/main")
 def main_page():
+    user = ...
+    five_unfollowed_dudes = []
     return render_template("main.html")
+
+
+@application.route("/profile")
+def profile_page():
+    return render_template("profile.html")
 
 
 # Пока что закомментирую (так сказать, до лучших времен)
