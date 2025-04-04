@@ -1,10 +1,13 @@
+import datetime
 import os
 
 from dotenv import load_dotenv
 from flask import Flask, render_template  # , redirect
 
 import api
+import database
 from database.create import init_db
+from database.models import UserProfile, AppUser
 
 # from flask_login import LoginManager, login_user, login_required, logout_user
 
@@ -83,9 +86,9 @@ def profile_page():
 
 def main():
     init_db()
+    application.register_blueprint(api.blueprint)
     application.run()
 
 
 if __name__ == '__main__':
-    application.register_blueprint(api.blueprint)
     main()

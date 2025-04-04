@@ -1,4 +1,6 @@
-from peewee import CharField, ForeignKeyField, DateTimeField
+import json
+
+from peewee import CharField, ForeignKeyField, DateTimeField, BooleanField
 
 from database.models.base import BaseModel
 from database.models.file_meta import FileMeta
@@ -16,6 +18,23 @@ class UserProfile(BaseModel):
 
 class AppUser(BaseModel):
     email = CharField(null=False, max_length=128)
+    email_is_hidden = BooleanField(default=False, null=False)
     login = CharField(null=False, max_length=32)
     password = CharField(null=False)  # password hash
     profile_data = ForeignKeyField(UserProfile, backref="user", null=False)
+
+    def json(self):
+        return json.dumps({
+            "profile_data": {
+                "first_name": self.profile_data.first_name,
+                "about": self.profile_data.about,
+                "status": self.profile_data.status,
+                "birth_date": str(self.profile_data.birth_date),
+                "profile_media": {
+                    "profile_photo": self.profile_data.profile_photo.json() if self.profile_data.profile_photo else None,
+                    "profile_picture": self.profile_data.profile_picture.json() if self.profile_data.profile_picture else None,
+                }
+            },
+            "email": self.email if not self.email_is_hidden else None,
+            "login": self.login,
+        })
