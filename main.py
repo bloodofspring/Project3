@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 from flask import Flask, render_template  # , redirect
 
+import api
 from database.create import init_db
 
 # from flask_login import LoginManager, login_user, login_required, logout_user
@@ -86,4 +87,5 @@ def main():
 
 
 if __name__ == '__main__':
+    application.register_blueprint(api.blueprint)
     main()
