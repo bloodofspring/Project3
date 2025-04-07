@@ -9,21 +9,24 @@ from database.models.users import AppUser
 
 class Post(BaseModel):
     author = ForeignKeyField(AppUser, backref="posts", null=False)
-    text = CharField(null=False)
+    text = CharField(null=True)
 
-    def json(self, max_comments: int | None = None, show_max_replies: int | None = None):
+    def dict(self, max_comments: int | None = None, show_max_replies: int | None = None):
         if max_comments is None:
             max_comments = 50
 
         if show_max_replies is None:
             show_max_replies = 25
 
-        return json.dumps({
-            "author": self.author.json(),
+        return {
+            "author": self.author.dict(),
             "text": self.text,
-            "media": [m.json() for m in self.media_rel],
-            "comments": [c.json(show_max_replies=show_max_replies) for c in self.comments[:max_comments]],
-        })
+            "media": [m.media.dict() for m in self.media_rel],
+            "comments": [c.dict(show_max_replies=show_max_replies) for c in self.comments[:max_comments]],
+        }
+
+    def json(self, max_comments: int | None = None, show_max_replies: int | None = None):
+        return json.dumps(self.dict(max_comments=max_comments, show_max_replies=show_max_replies))
 
 
 class PostsToMedia(BaseModel):
@@ -38,11 +41,14 @@ class Comments(BaseModel):
     text = CharField(null=False)
     likes = IntegerField(null=False)
 
-    def json(self, show_max_replies: int = 50):
-        return json.dumps({
-            "author": self.author.json(),
+    def dict(self, show_max_replies: int = 50):
+        return {
+            "author": self.author.dict(),
             "text": self.text,
             "likes": self.likes,
-            "reply_to_comment": self.reply_to_comment.json() if self.reply_to_comment else None,
-            "replies": [c.json() for c in self.replies[:show_max_replies]]
-        })
+            "reply_to_comment": self.reply_to_comment.dict() if self.reply_to_comment else None,
+            "replies": [c.dict() for c in self.replies[:show_max_replies]]
+        }
+
+    def json(self, show_max_replies: int = 50):
+        return json.dumps(self.dict(show_max_replies=show_max_replies))

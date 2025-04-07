@@ -17,6 +17,7 @@ load_dotenv()
 
 application = Flask(__name__)
 application.config['SECRET_KEY'] = os.environ["app_secret_key"]
+application.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Максимальный размер загружаемых файлов
 
 # login_manager = LoginManager()
 # login_manager.init_app(application)
@@ -87,7 +88,7 @@ def profile_page():
 def main():
     init_db()
     application.register_blueprint(api.blueprint)
-    application.run()
+    application.run(debug=True)
 
 
 if __name__ == '__main__':

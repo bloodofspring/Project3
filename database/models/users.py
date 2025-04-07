@@ -23,8 +23,8 @@ class AppUser(BaseModel):
     password = CharField(null=False)  # password hash
     profile_data = ForeignKeyField(UserProfile, backref="user", null=False)
 
-    def json(self):
-        return json.dumps({
+    def dict(self):
+        return {
             "profile_data": {
                 "first_name": self.profile_data.first_name,
                 "about": self.profile_data.about,
@@ -37,4 +37,7 @@ class AppUser(BaseModel):
             },
             "email": self.email if not self.email_is_hidden else None,
             "login": self.login,
-        })
+        }
+
+    def json(self):
+        return json.dumps(self.dict())

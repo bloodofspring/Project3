@@ -21,9 +21,12 @@ class FileMeta(BaseModel):
     def get_full_path(self):
         return os.path.join(str(self.path), self.filename + "." + self.extension)
 
-    def json(self):
-        return json.dumps({
+    def dict(self):
+        return {
             "file_id": self.filename,
             "extension": self.extension,
             "size": self.size,
-        })
+        }
+
+    def json(self):
+        return json.dumps(self.dict())
