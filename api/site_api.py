@@ -36,9 +36,21 @@ def get_post():
         if len(posts) == 0:
             return json.dumps({"message": f"Post with ID {post_id} does not exist"}), 404
 
+    try:
+        max_comments = flask.request.args.get('max_comments')
+        show_max_replies = flask.request.args.get('show_max_replies')
+
+        if max_comments is not None:
+            max_comments = int(max_comments)
+
+        if show_max_replies is not None:
+            show_max_replies = int(show_max_replies)
+    except (Exception,):
+        return json.dumps({"message": "Invalid datatype"}), 400
+
     return posts[0].json(
-        max_comments=flask.request.args.get('max_comments'),
-        show_max_replies=flask.request.args.get('show_max_replies'),
+        max_comments=max_comments,
+        show_max_replies=show_max_replies,
     ), 201
 
 
