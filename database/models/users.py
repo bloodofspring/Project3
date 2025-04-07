@@ -37,6 +37,7 @@ class AppUser(BaseModel):
             },
             "email": self.email if not self.email_is_hidden else None,
             "login": self.login,
+            "posts": [p.dict(show_author=False) for p in self.posts]
         }
 
     def json(self):

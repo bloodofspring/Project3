@@ -11,7 +11,7 @@ class Post(BaseModel):
     author = ForeignKeyField(AppUser, backref="posts", null=False)
     text = CharField(null=True)
 
-    def dict(self, max_comments: int | None = None, show_max_replies: int | None = None):
+    def dict(self, max_comments: int | None = None, show_max_replies: int | None = None, show_author: bool = True):
         if max_comments is None:
             max_comments = 50
 
@@ -19,7 +19,7 @@ class Post(BaseModel):
             show_max_replies = 25
 
         return {
-            "author": self.author.dict(),
+            "author": self.author.dict() if show_author else None,
             "text": self.text,
             "media": [m.media.dict() for m in self.media_rel],
             "comments": [c.dict(show_max_replies=show_max_replies) for c in self.comments[:max_comments]],
@@ -36,7 +36,7 @@ class PostsToMedia(BaseModel):
 
 class Comments(BaseModel):
     post = ForeignKeyField(Post, backref="comments", null=False)
-    author = ForeignKeyField(AppUser, backref="posts", null=False)
+    author = ForeignKeyField(AppUser, backref="comments", null=False)
     reply_to_comment = ForeignKeyField("self", backref="replies", null=True, default=None)
     text = CharField(null=False)
     likes = IntegerField(null=False)
