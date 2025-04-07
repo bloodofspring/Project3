@@ -2,7 +2,8 @@ import datetime
 import os
 
 from dotenv import load_dotenv
-from flask import Flask, render_template  # , redirect
+from flask import Flask, render_template, redirect, url_for, request, session
+from data.login_form import LoginForm
 
 import api
 import database
@@ -11,7 +12,6 @@ from database.models import UserProfile, AppUser
 
 # from flask_login import LoginManager, login_user, login_required, logout_user
 
-# from forms.job_form import JobForm
 
 load_dotenv()
 
@@ -46,43 +46,63 @@ def profile_page():
     return render_template("profile.html")
 
 
-# Пока что закомментирую (так сказать, до лучших времен)
-# @application.route('/login', methods=['GET', 'POST'])
-# def login():
-#     form = LoginForm()
-#     if form.validate_on_submit():
-#         db_sess = db_session.create_session()
-#         user = db_sess.query(User).filter(User.email == form.email.data).first()
-#         if user and user.check_password(form.password.data):
-#             login_user(user, remember=form.remember_me.data)
-#             return redirect("/")
-#         return render_template('login.html', message="Неправильный логин или пароль", form=form)
-#     return render_template('login.html', title='Авторизация', form=form)
+users_db = {
+    # Пример пользователя:
+    "test_user": {
+        "first_name": "Иван",
+        "last_name": "Иванов",
+        "birth_date": "1990-01-01",
+        "email": "ivan@example.com",
+        "password": "12345"  # Пароли должны храниться в хешированном виде!
+    }
+}
 
 
-# @application.route('/add_job', methods=['GET', 'POST'])
-# @login_required
-# def add_job():
-#     form = JobForm()
-#     if form.validate_on_submit():
-#         db_sess = db_session.create_session()
-#         job = Jobs()
-#         job.job = form.job.data
-#         job.team_leader = form.team_leader.data
-#         job.work_size = form.work_size.data
-#         job.collaborators = form.collaborators.data
-#         job.is_finished = form.is_finished.data
-#         db_sess.add(job)
-#         db_sess.commit()
-#         return redirect('/')
-#     return render_template('add_job.html', title='Добавление работы', form=form)
+@application.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        # Получаем данные из формы
+        user_data = {
+            "first_name": request.form['first_name'],
+            "last_name": request.form['last_name'],
+            "birth_date": request.form['birth_date'],
+            "email": request.form['email'],
+            "username": request.form['username'],
+            "password": request.form['password']  # ToDo: захэшировать пароли
+        }
+
+        # Проверка на занятось логина или почты
+        if user_data['username'] in users_db:
+            return render_template('register.html', error="Логин уже занят")
+        if any(u['email'] == user_data['email'] for u in users_db.values()):
+            return render_template('register.html', error="Почта уже используется")
+
+        # ToDo: Сохрани пользователя в БД)
+        users_db[user_data['username']] = user_data
+        return redirect(url_for('login'))
+
+    return render_template('register.html')
 
 
-# @application.route('/logout')
-# @login_required
-# def logout():
-#     logout_user()
-#     return redirect("/")
+@application.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = users_db.get(username)
+
+        if user and user['password'] == password:
+            session['user'] = username
+            return redirect(url_for('profile'))
+        else:
+            return render_template('login.html', error="Неверный логин или пароль")
+
+    return render_template('login.html')
+
+
+@application.route('/success')
+def success():
+    return "Регистрация прошла успешно!"
 
 
 def main():

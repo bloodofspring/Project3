@@ -1,24 +1,61 @@
-h1 {
-    color: #d22e3a;
-}
-
-#form_mars {
-    margin-left: auto;
-    matgin-right: auto;
-    max-width: 450px;
-    background-color: #FFDAB9;
-    border: 1px solid gray;
-    border-radius: 5px;
-    padding: 10px;
-}
-
-h4.my-h4 {
-    color: #cccccc;
+body {
+    font-family: Arial, sans-serif;
+    max-width: 400px;
+    margin: 0 auto;
     padding: 20px;
 }
-
-h2#mission {
-    padding-left: 160px;
-    background: url(/static/img/mission_small.png) no-repeat;
-    min-height: 50px;
+h1 {
+    text-align: center;
+}
+.form-group {
+    margin-bottom: 15px;
+}
+label {
+    display: block;
+    margin-bottom: 5px;
+}
+input {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #45a049;
+}
+.avatar-preview {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+    display: none;
+    border: 2px solid #ddd;
+}
+.avatar-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.avatar-label {
+    cursor: pointer;
+    padding: 8px 15px;
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    text-align: center;
+    transition: background-color 0.3s;
+}
+.avatar-label:hover {
+    background-color: #e0e0e0;
+}
+#avatar {
+    display: none;
 }
