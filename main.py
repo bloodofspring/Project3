@@ -88,9 +88,9 @@ def register():
             )
 
             current_user: AppUser = AppUser(
-                email=request.form['email'],
+                email=request.form['email'].lower(),
                 # email_is_hidden=False,
-                login=request.form['username'],
+                login=request.form['username'].lower(),
                 password=util.hash_password(request.form['password']),
                 profile_data=user_data,
             )
