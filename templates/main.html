@@ -317,11 +317,12 @@ Header END -->
 
 
                 <!-- Share feed START -->
-                <div class="card card-body">
+                <div class="card card-body" id="postCard-52">
                     <div class="d-flex mb-3">
                         <!-- Avatar -->
                         <div class="avatar avatar-xs me-2">
-                            <a href="#"> <img class="avatar-img rounded-circle" src="static/images/empty_profile.png" alt=""> </a>
+                            <a href="#"> <img class="avatar-img rounded-circle" src="static/images/empty_profile.png"
+                                              alt=""> </a>
                         </div>
                         <!-- Post input -->
                         <form class="w-100">
@@ -333,10 +334,10 @@ Header END -->
                     <ul class="nav nav-pills nav-stack small fw-normal">
                         <li class="nav-item">
                             <!-- Скрытый input для выбора файла -->
-                            <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                            <input type="file" id="fileInput-{{ unique_id }}" accept="image/*" style="display: none;">
                             <!-- Модифицированная кнопка Photo -->
                             <a class="nav-link bg-light py-1 px-2 mb-0" href="#"
-                               onclick="document.getElementById('fileInput').click()">
+                               onclick="document.getElementById('fileInput-{{ unique_id }}').click()">
                                 Photo
                             </a>
                         </li>
@@ -346,17 +347,13 @@ Header END -->
 
                 <script>
                     // Обработчик для выбранного изображения
-                    document.getElementById('fileInput').addEventListener('change', function(event) {
+                    document.getElementById('fileInput-{{ unique_id }}').addEventListener('change', function(event) {
                       const file = event.target.files[0];
                       if (file) {
                         console.log("Выбран файл:", file.name);
-                        // Здесь можно добавить обработку изображения
-                        // Например, отображение превью или загрузку на сервер
 
-                        // Пример создания превью:
                         const reader = new FileReader();
                         reader.onload = function(e) {
-                          // Создаем элемент для превью (можно адаптировать под ваш дизайн)
                           const preview = document.createElement('div');
                           preview.innerHTML = `
                             <div class="mt-3">
@@ -364,8 +361,8 @@ Header END -->
                               <p class="small mt-1">${file.name}</p>
                             </div>
                           `;
-                          // Вставляем превью после toolbar
-                          document.querySelector('.card-body').appendChild(preview);
+                          // Вставляем превью в конкретную карточку
+                          document.getElementById('postCard-52').appendChild(preview);
                         };
                         reader.readAsDataURL(file);
                       }
@@ -414,7 +411,8 @@ Header END -->
                         <div class="d-flex mb-3">
                             <!-- Avatar -->
                             <div class="avatar avatar-xs me-2">
-								<a href="#!"> <img class="avatar-img rounded-circle" src="static/images/empty_profile.png" alt=""> </a>
+                                <a href="#!"> <img class="avatar-img rounded-circle"
+                                                   src="static/images/empty_profile.png" alt=""> </a>
                             </div>
                             <!-- Comment box  -->
                             <form class="nav nav-item w-100 position-relative">
