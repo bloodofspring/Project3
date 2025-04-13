@@ -23,6 +23,7 @@ logging.basicConfig(level=logging.INFO)
 application = Flask(__name__)
 application.config['SECRET_KEY'] = os.environ["app_secret_key"]
 application.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Максимальный размер загружаемых файлов
+application.config['ALLOWED_EXTENSIONS'] = {".jpg", ".jpeg", ".png"}
 
 # login_manager = LoginManager()
 # login_manager.init_app(application)
