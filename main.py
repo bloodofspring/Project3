@@ -2,7 +2,7 @@ import datetime
 import os
 
 from dotenv import load_dotenv
-from flask import Flask, render_template, redirect, url_for, request, session
+from flask import Flask, render_template, redirect, url_for, request, session, flash
 
 
 import api
@@ -55,13 +55,23 @@ def profile_page():
 def register():
     if request.method == 'POST':
         with database.connect_to_database():
-            has_avatar = False
-            if has_avatar:
+            if request.files.get("avatar"):
+                avatar = request.files.get("avatar")
+
+                if not os.path.exists("static/users"):
+                    os.mkdir("static/users")
+
+                if not os.path.exists("static/users/profile_photos"):
+                    os.mkdir("static/users/profile_photos")
+
                 file_meta: FileMeta | None = FileMeta(
-                    path="",
-                    extension="",
+                    path="static/users/profile_photos",
+                    extension=avatar.filename.rsplit('.', 1)[1].lower(),
                     size=-1,
                 )
+
+                avatar.save(os.path.join("static/users/profile_photos", file_meta.filename + "." + file_meta.extension))
+                file_meta.size = os.path.getsize(f"static/users/profile_photos/{file_meta.filename}.{file_meta.extension}")
             else:
                 file_meta: FileMeta | None = None
 
