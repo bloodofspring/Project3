@@ -144,8 +144,11 @@ def upload_post():
     save_results = []
     allowed_post_extensions = {'png', 'jpg', 'jpeg', 'gif', 'mp4'}
 
-    if not os.path.exists("post_media"):
-        os.mkdir("post_media")
+    if not os.path.exists("static/posts"):
+        os.mkdir("static/posts")
+
+    if not os.path.exists("static/posts/post_media"):
+        os.mkdir("static/posts/post_media")
 
     for file in files:
         if not file:
@@ -162,12 +165,12 @@ def upload_post():
 
         with database.connect_to_database():
             file_meta = FileMeta.create(
-                path="post_media",
+                path="static/posts/post_media",
                 extension=file.filename.rsplit('.', 1)[1].lower(),
                 size=-1,
             )
-            file.save(os.path.join("post_media", file_meta.filename + "." + file_meta.extension))
-            file_meta.size = os.path.getsize(f"post_media/{file_meta.filename}.{file_meta.extension}")
+            file.save(os.path.join("static/posts/post_media", file_meta.filename + "." + file_meta.extension))
+            file_meta.size = os.path.getsize(f"static/posts/post_media/{file_meta.filename}.{file_meta.extension}")
             file_meta.save()
             save_results.append({
                 "src_filename": file.filename,
