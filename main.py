@@ -3,7 +3,7 @@ import os
 
 from dotenv import load_dotenv
 from flask import Flask, render_template, redirect, url_for, request, session
-from data.login_form import LoginForm
+
 
 import api
 import database
@@ -37,8 +37,8 @@ def index():
 @application.route("/main")
 def main_page():
     user = ...
-    five_unfollowed_dudes = []
-    return render_template("main.html")
+    five_unfollowed_dudes = ['Johny Depp', 'Elon Musk', 'bloodofspring', 'SIlD', 'GodGamer228']
+    return render_template("main.html", dudes=five_unfollowed_dudes)
 
 
 @application.route("/profile")
