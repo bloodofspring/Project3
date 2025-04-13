@@ -7,13 +7,18 @@ from flask import Flask, render_template, redirect, url_for, request, session
 
 import api
 import database
+import util
 from database.create import init_db
-from database.models import UserProfile, AppUser
+from database.models import UserProfile, AppUser, FileMeta
+
+import logging
 
 # from flask_login import LoginManager, login_user, login_required, logout_user
 
 
 load_dotenv()
+
+logging.basicConfig(level=logging.INFO)
 
 application = Flask(__name__)
 application.config['SECRET_KEY'] = os.environ["app_secret_key"]
@@ -46,39 +51,61 @@ def profile_page():
     return render_template("profile.html")
 
 
-users_db = {
-    # Пример пользователя:
-    "test_user": {
-        "first_name": "Иван",
-        "last_name": "Иванов",
-        "birth_date": "1990-01-01",
-        "email": "ivan@example.com",
-        "password": "12345"  # Пароли должны храниться в хешированном виде!
-    }
-}
-
-
 @application.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        # Получаем данные из формы
-        user_data = {
-            "first_name": request.form['first_name'],
-            "last_name": request.form['last_name'],
-            "birth_date": request.form['birth_date'],
-            "email": request.form['email'],
-            "username": request.form['username'],
-            "password": request.form['password']  # ToDo: захэшировать пароли
-        }
+        with database.connect_to_database():
+            has_avatar = False
+            if has_avatar:
+                file_meta: FileMeta | None = FileMeta(
+                    path="",
+                    extension="",
+                    size=-1,
+                )
+            else:
+                file_meta: FileMeta | None = None
 
-        # Проверка на занятось логина или почты
-        if user_data['username'] in users_db:
-            return render_template('register.html', error="Логин уже занят")
-        if any(u['email'] == user_data['email'] for u in users_db.values()):
-            return render_template('register.html', error="Почта уже используется")
+            user_data: UserProfile = UserProfile(
+                first_name=request.form['first_name'],
+                last_name=request.form['last_name'],
+                profile_photo=file_meta,
+                birth_date=datetime.datetime(
+                    year=int(request.form['birth_date'].split("-")[0]),
+                    month=int(request.form['birth_date'].split("-")[1]),
+                    day=int(request.form['birth_date'].split("-")[2]),
+                ),
+            )
 
-        # ToDo: Сохрани пользователя в БД)
-        users_db[user_data['username']] = user_data
+            current_user: AppUser = AppUser(
+                email=request.form['email'],
+                # email_is_hidden=False,
+                login=request.form['username'],
+                password=util.hash_password(request.form['password']),
+                profile_data=user_data,
+            )
+
+            users_with_same_username = AppUser.select().where(AppUser.login == current_user.login)[:]
+
+            if len(users_with_same_username) != 0:
+                return render_template('register.html', error="Логин уже занят")
+
+            users_with_same_email = AppUser.select().where(AppUser.email == current_user.email)[:]
+
+            if len(users_with_same_email) != 0:
+                return render_template('register.html', error="Почта уже используется")
+
+            try:
+                if file_meta:
+                    file_meta.save()
+
+                user_data.save()
+                current_user.save()
+            except (Exception,) as registration_error:
+                logging.warning(
+                    f"При регистрации пользователя {AppUser.login} ({AppUser.email}) произошла ошибка! "
+                    f"({type(registration_error)}: {registration_error})"
+                )
+
         return redirect(url_for('login'))
 
     return render_template('register.html')
@@ -89,9 +116,12 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        user = users_db.get(username)
+        user: list[AppUser] = AppUser.select().where(AppUser.login == username)[:]
 
-        if user and user['password'] == password:
+        if len(user) == 0:
+            return render_template('login.html', error="Неверный логин или пароль")
+
+        if user[0].password == util.hash_password(password):
             session['user'] = username
             return redirect(url_for('profile'))
         else:
