@@ -1,30 +1,22 @@
-{% extends "base.html" %}
-
-
-{% block content %}
-<h1>Авторизация</h1>
-<form action="" method="post">
-    {{ form.hidden_tag() }}
-    <p>
-        {{ form.email.label }}<br>
-        {{ form.email(class="form-control", type="email") }}<br>
-        {% for error in form.email.errors %}
-        <div class="alert alert-danger" role="alert">
-            {{ error }}
-        </div>
-        {% endfor %}
-    </p>
-    <p>
-        {{ form.password.label }}<br>
-        {{ form.password(class="form-control", type="password") }}<br>
-        {% for error in form.password.errors %}
-        <div class="alert alert-danger" role="alert">
-            {{ error }}
-        </div>
-        {% endfor %}
-    </p>
-    <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
-    <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
-    <div>{{ message }}</div>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход</title>
+    <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+<form action="/login" method="POST">  <!-- Добавьте action и method -->
+    <div class="form-group">
+        <label for="username">Логин</label>
+        <input type="text" id="username" name="username" required placeholder="Введите ваш логин">
+    </div>
+    <div class="form-group">
+        <label for="password">Пароль</label>
+        <input type="password" id="password" name="password" required placeholder="Введите ваш пароль">
+    </div>
+    <button type="submit">Войти</button>
 </form>
-{% endblock %}
+</body>
+</html>

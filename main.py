@@ -1,76 +1,160 @@
-from flask import Flask, render_template, redirect
-from data import db_session
-from data.jobs import Jobs
-from data.login_form import LoginForm
-from data.users import User
-from flask_login import LoginManager, login_user, login_required, logout_user
+import datetime
+import os
 
-from forms.job_form import JobForm
+from dotenv import load_dotenv
+from flask import Flask, render_template, redirect, url_for, request, session, flash
+
+
+import api
+import database
+import util
+from database.create import init_db
+from database.models import UserProfile, AppUser, FileMeta
+
+import logging
+
+# from flask_login import LoginManager, login_user, login_required, logout_user
+
+
+load_dotenv()
+
+logging.basicConfig(level=logging.INFO)
 
 application = Flask(__name__)
-application.config['SECRET_KEY'] = 'SFgjr35q6#$%n^$n7>z'
+application.config['SECRET_KEY'] = os.environ["app_secret_key"]
+application.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Максимальный размер загружаемых файлов
+application.config['ALLOWED_EXTENSIONS'] = {".jpg", ".jpeg", ".png"}
 
-login_manager = LoginManager()
-login_manager.init_app(application)
+# login_manager = LoginManager()
+# login_manager.init_app(application)
 
 
-@login_manager.user_loader
-def load_user(user_id):
-    db_sess = db_session.create_session()
-    return db_sess.query(User).get(user_id)
+# @login_manager.user_loader
+# def load_user(user_id):
+#     db_sess = db_session.create_session()
+#     return db_sess.query(User).get(user_id)
 
 
 @application.route("/")
 def index():
-    db_sess = db_session.create_session()
-    jobs = db_sess.query(Jobs).all()
-    users = db_sess.query(User).all()
-    names = {item.id: f"{item.surname} {item.name}" for item in users}
-    return render_template("index.html", jobs=jobs, names=names)
+    return render_template("index.html")
+
+
+@application.route("/main")
+def main():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    five_unfollowed_dudes = ['Johny Depp', 'Elon Musk', 'bloodofspring', 'SIlD', 'GodGamer228']
+    return render_template("main.html", dudes=five_unfollowed_dudes)
+
+
+@application.route("/profile")
+def profile_page():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    return render_template("profile.html")
+
+
+@application.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        with database.connect_to_database():
+            if request.files.get("avatar"):
+                avatar = request.files.get("avatar")
+
+                if not os.path.exists("static/users"):
+                    os.mkdir("static/users")
+
+                if not os.path.exists("static/users/profile_photos"):
+                    os.mkdir("static/users/profile_photos")
+
+                file_meta: FileMeta | None = FileMeta(
+                    path="static/users/profile_photos",
+                    extension=avatar.filename.rsplit('.', 1)[1].lower(),
+                    size=-1,
+                )
+
+                avatar.save(os.path.join("static/users/profile_photos", file_meta.filename + "." + file_meta.extension))
+                file_meta.size = os.path.getsize(f"static/users/profile_photos/{file_meta.filename}.{file_meta.extension}")
+            else:
+                file_meta: FileMeta | None = None
+
+            user_data: UserProfile = UserProfile(
+                first_name=request.form['first_name'],
+                last_name=request.form['last_name'],
+                profile_photo=file_meta,
+                birth_date=datetime.datetime(
+                    year=int(request.form['birth_date'].split("-")[0]),
+                    month=int(request.form['birth_date'].split("-")[1]),
+                    day=int(request.form['birth_date'].split("-")[2]),
+                ),
+            )
+
+            current_user: AppUser = AppUser(
+                email=request.form['email'].lower(),
+                # email_is_hidden=False,
+                login=request.form['username'].lower(),
+                password=util.hash_password(request.form['password']),
+                profile_data=user_data,
+            )
+
+            users_with_same_username = AppUser.select().where(AppUser.login == current_user.login)[:]
+
+            if len(users_with_same_username) != 0:
+                return render_template('register.html', error="Логин уже занят")
+
+            users_with_same_email = AppUser.select().where(AppUser.email == current_user.email)[:]
+
+            if len(users_with_same_email) != 0:
+                return render_template('register.html', error="Почта уже используется")
+
+            try:
+                if file_meta:
+                    file_meta.save()
+
+                user_data.save()
+                current_user.save()
+            except (Exception,) as registration_error:
+                logging.warning(
+                    f"При регистрации пользователя {AppUser.login} ({AppUser.email}) произошла ошибка! "
+                    f"({type(registration_error)}: {registration_error})"
+                )
+
+        return redirect(url_for('login'))
+
+    return render_template('register.html')
 
 
 @application.route('/login', methods=['GET', 'POST'])
 def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        db_sess = db_session.create_session()
-        user = db_sess.query(User).filter(User.email == form.email.data).first()
-        if user and user.check_password(form.password.data):
-            login_user(user, remember=form.remember_me.data)
-            return redirect("/")
-        return render_template('login.html', message="Неправильный логин или пароль", form=form)
-    return render_template('login.html', title='Авторизация', form=form)
+    if request.method == 'POST':
+        username = request.form['username'].lower()
+        password = request.form['password']
+        user: list[AppUser] = AppUser.select().where(AppUser.login == username)[:]
+
+        if len(user) == 0:
+            return render_template('login.html', error="Неверный логин или пароль")
+
+        if user[0].password == util.hash_password(password):
+            session['user'] = username
+            return redirect(url_for('main'))
+        else:
+            return render_template('login.html', error="Неверный логин или пароль")
+
+    return render_template('login.html')
 
 
-@application.route('/add_job', methods=['GET', 'POST'])
-@login_required
-def add_job():
-    form = JobForm()
-    if form.validate_on_submit():
-        db_sess = db_session.create_session()
-        job = Jobs()
-        job.job = form.job.data
-        job.team_leader = form.team_leader.data
-        job.work_size = form.work_size.data
-        job.collaborators = form.collaborators.data
-        job.is_finished = form.is_finished.data
-        db_sess.add(job)
-        db_sess.commit()
-        return redirect('/')
-    return render_template('add_job.html', title='Добавление работы', form=form)
-
-
-@application.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect("/")
+@application.route('/success')
+def success():
+    return "Регистрация прошла успешно!"
 
 
 def main():
-    db_session.global_init("db/mars_explorer.db")
-    db_sess = db_session.create_session()
-    application.run()
+    init_db()
+    application.register_blueprint(api.blueprint)
+    application.run(debug=True)
 
 
 if __name__ == '__main__':

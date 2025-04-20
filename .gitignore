@@ -1,0 +1,5 @@
+.idea
+.env
+**/__pycache__
+.DS_Store
+post_media

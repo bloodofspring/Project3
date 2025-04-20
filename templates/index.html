@@ -1,30 +1,10 @@
-{% extends "base.html" %}
-
-{% block content %}
-<h1 class="text-center">Works Log</h1>
-{% for item in jobs %}
-<h2>Action # {{ item.id }}</h2>
-<div class="table_container">
-    <table>
-        <tr>
-            <td class="title" width="400px" bgcolor="#dddddd">Title of Activity</td>
-            <td class="title" width="150px" bgcolor="#dddddd">Team Leader</td>
-            <td class="title" width="100px" bgcolor="#dddddd">Duration</td>
-            <td class="title" width="200px" bgcolor="#dddddd">List of Collaborators</td>
-            <td class="title" width="100px" bgcolor="#dddddd">Is Finished</td>
-        </tr>
-        <tr>
-            <td class="ordinary" bgcolor="#eeeeff">{{ item.job.capitalize() }}</td>
-            <td class="ordinary" bgcolor="#eeeeff">{{ names[item.team_leader] }}</td>
-            <td class="ordinary" bgcolor="#eeeeff">{{ item.work_size }} hours</td>
-            <td class="ordinary" bgcolor="#eeeeff">{{ item.collaborators }}</td>
-            {% if item.is_finished %}
-            <td class="ordinary" bgcolor="#eeffee">Finished</td>
-            {% else %}
-            <td class="ordinary" bgcolor="#ffeeff">Is not finished</td>
-            {% endif %}
-        </tr>
-    </table>
-</div>
-{% endfor %}
-{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test</title>
+</head>
+<body>
+Success
+</body>
+</html>
