@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -6,30 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход</title>
     <link rel="stylesheet" href="static/css/style.css">
-    <link rel="shortcut icon" href="static/images/favicon.ico">
 </head>
 <body>
-    <div class="login-container">
-        <h1>Вход</h1>
-
-        <!-- Блок для вывода ошибок -->
-        <div class="error-message" id="errorMessage"></div>
-
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="username">Логин</label>
-                <input type="text" id="username" name="username" required placeholder="Введите ваш логин">
-            </div>
-            <div class="form-group">
-                <label for="password">Пароль</label>
-                <input type="password" id="password" name="password" required placeholder="Введите ваш пароль">
-            </div>
-            <button type="submit">Войти</button>
-        </form>
-
-        <div class="register-link">
-            Если нет аккаунта, то <a href="/register">зарегистрируйся, братик >^.^<</a>
-        </div>
+<form action="/login" method="POST">  <!-- Добавьте action и method -->
+    <div class="form-group">
+        <label for="username">Логин</label>
+        <input type="text" id="username" name="username" required placeholder="Введите ваш логин">
     </div>
+    <div class="form-group">
+        <label for="password">Пароль</label>
+        <input type="password" id="password" name="password" required placeholder="Введите ваш пароль">
+    </div>
+    <button type="submit">Войти</button>
+</form>
 </body>
 </html>

@@ -41,14 +41,19 @@ def index():
 
 
 @application.route("/main")
-def main_page():
-    user = ...
+def main():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
     five_unfollowed_dudes = ['Johny Depp', 'Elon Musk', 'bloodofspring', 'SIlD', 'GodGamer228']
     return render_template("main.html", dudes=five_unfollowed_dudes)
 
 
 @application.route("/profile")
 def profile_page():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
     return render_template("profile.html")
 
 
@@ -134,7 +139,7 @@ def login():
 
         if user[0].password == util.hash_password(password):
             session['user'] = username
-            return redirect(url_for('profile'))
+            return redirect(url_for('main'))
         else:
             return render_template('login.html', error="Неверный логин или пароль")
 
