@@ -173,7 +173,19 @@ def about():
 @application.route('/save-about', methods=['POST'])
 def save_about():
     about_text = request.form.get('about_text')
-    print(f"Saved about text: {about_text}")
+
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    try:
+        user: AppUser = AppUser.select().where(AppUser.login == session['user'])[0]
+    except IndexError:
+        return f"Пользователя с ником {session['user']} не существует", 404
+
+    with database.connect_to_database():
+        user.profile_data.about = about_text
+        user.profile_data.save()
+
     return redirect(url_for('profile'))
 
 
