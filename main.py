@@ -9,7 +9,7 @@ import api
 import database
 import util
 from database.create import init_db
-from database.models import UserProfile, AppUser, FileMeta
+from database.models import UserProfile, AppUser, FileMeta, Post, PostsToMedia
 
 import logging
 
@@ -50,8 +50,13 @@ def main():
     except IndexError:
         return f"Пользователя с ником {session['user']} не существует", 404
 
+    try:
+        posts_from_user = Post.select().where(Post.author == user)
+    except (Exception,) as e:
+        print(f"Cannot get posts of user {user.login}: {e}")
 
-    return render_template("main.html", dudes= [1, 2, 3], user=user)
+
+    return render_template("main.html", dudes= [1, 2, 3], user=user, posts_count=len(posts_from_user))
 
 
 @application.route("/profile")
@@ -192,36 +197,48 @@ def save_about():
 
 @application.route('/create_post', methods=['POST'])
 def create_post():
-    # Получаем текст поста
-    post_text = request.form.get('text', '').strip()
+    post_text = request.form.get('text', None)
 
+    if request.files.get("photo"):
+        photo = request.files.get("photo")
 
-    photo_path = None
-    if 'photo' in request.files:
-        file = request.files['photo']
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
+        if not os.path.exists("static/uploads"):
+            os.mkdir("static/uploads")
 
-            unique_filename = f"{datetime.now().timestamp()}_{filename}"
-            save_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-            file.save(save_path)
-            photo_path = save_path
+        file_meta: FileMeta | None = FileMeta(
+            path="static/uploads",
+            extension=photo.filename.rsplit('.', 1)[1].lower(),
+            size=-1,
+        )
 
+        photo.save(os.path.join("static/uploads", file_meta.filename + "." + file_meta.extension))
+        file_meta.size = os.path.getsize(f"static/uploads/{file_meta.filename}.{file_meta.extension}")
+    else:
+        file_meta: FileMeta | None = None
 
     try:
-        new_post = Post(
-            user_id=current_user.id,
-            text=post_text,
-            image_path=photo_path,
-            created_at=datetime.utcnow()
-        )
-        db.session.add(new_post)
-        db.session.commit()
+        with database.connect_to_database():
+            user = AppUser.select().where(AppUser.login == session["user"])[0]
 
-        return jsonify({'success': True}), 200
+            new_post = Post(
+                author=user,
+                text=post_text,
+            )
+            new_post.save()
+
+            if file_meta is not None:
+                file_meta.save()
+                PostsToMedia.create(
+                    post=new_post,
+                    media=file_meta
+                )
+
+            return redirect(url_for("main"))
+    except IndexError:
+        return redirect(url_for("login"))
     except Exception as e:
         print(f"Error creating post: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return redirect(url_for("main"))
 
 
 @application.route('/success')
