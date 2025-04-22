@@ -15,6 +15,19 @@ class UserProfile(BaseModel):
     profile_picture = ForeignKeyField(FileMeta, backref="profile_pictures", null=True, default=None)
     birth_date = DateTimeField(null=True, default=None)
 
+    def birth_date_fmt(self):
+        if self.birth_date is None:
+            return "-"
+
+        return f"{self.birth_date.day}/{self.birth_date.month}/{self.birth_date.year}"
+    
+    @property
+    def get_about(self):
+        if self.about is None:
+            return "-"
+
+        return self.about
+
 
 class AppUser(BaseModel):
     email = CharField(null=False, max_length=128)
