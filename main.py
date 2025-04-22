@@ -45,8 +45,8 @@ def main():
     if 'user' not in session:
         return redirect(url_for('login'))
 
-    five_unfollowed_dudes = ['Johny Depp', 'Elon Musk', 'bloodofspring', 'SIlD', 'GodGamer228']
-    return render_template("main.html", dudes=five_unfollowed_dudes)
+    five_unfollowed_dudes = ['Johny Depp', 'Elon Musk', 'bloodofspring', 'SIlD', 'GodGamer3000']
+    return render_template("main.html", dudes=five_unfollowed_dudes, user=session['user'])
 
 
 @application.route("/profile")
@@ -135,12 +135,15 @@ def login():
         user: list[AppUser] = AppUser.select().where(AppUser.login == username)[:]
 
         if len(user) == 0:
+            print("Пользователь не найден")
             return render_template('login.html', error="Неверный логин или пароль")
 
         if user[0].password == util.hash_password(password):
             session['user'] = username
+            print(f"Успешный вход, перенаправляю на {url_for('main')}")
             return redirect(url_for('main'))
         else:
+            print("Неверный пароль")
             return render_template('login.html', error="Неверный логин или пароль")
 
     return render_template('login.html')
