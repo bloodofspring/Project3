@@ -3,7 +3,7 @@ import os
 
 from dotenv import load_dotenv
 from flask import Flask, render_template, redirect, url_for, request, session, flash
-
+from werkzeug.utils import secure_filename
 
 import api
 import database
@@ -50,7 +50,8 @@ def main():
     except IndexError:
         return f"Пользователя с ником {session['user']} не существует", 404
 
-    return render_template("main.html", user=user)
+
+    return render_template("main.html", dudes= [1, 2, 3], user=user)
 
 
 @application.route("/profile")
@@ -187,6 +188,39 @@ def save_about():
         user.profile_data.save()
 
     return redirect(url_for('profile'))
+
+
+@application.route('/create_post', methods=['POST'])
+def create_post():
+    # Получаем текст поста
+    post_text = request.form.get('text', '').strip()
+
+    photo_path = None
+    if 'photo' in request.files:
+        file = request.files['photo']
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+
+            unique_filename = f"{datetime.now().timestamp()}_{filename}"
+            save_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            file.save(save_path)
+            photo_path = save_path
+
+
+    try:
+        new_post = Post(
+            user_id=current_user.id,
+            text=post_text,
+            image_path=photo_path,
+            created_at=datetime.utcnow()
+        )
+        db.session.add(new_post)
+        db.session.commit()
+
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        print(f"Error creating post: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @application.route('/success')
