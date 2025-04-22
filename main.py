@@ -84,7 +84,12 @@ def register():
                 avatar.save(os.path.join("static/users/profile_photos", file_meta.filename + "." + file_meta.extension))
                 file_meta.size = os.path.getsize(f"static/users/profile_photos/{file_meta.filename}.{file_meta.extension}")
             else:
-                file_meta: FileMeta | None = None
+                file_meta: FileMeta | None = FileMeta(
+                    path="static/images/",
+                    filename="empty_profile",
+                    extension=".png",
+                    size=3072,  # 3kb
+                )
 
             user_data: UserProfile = UserProfile(
                 first_name=request.form['first_name'],
