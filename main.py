@@ -87,7 +87,7 @@ def register():
                 file_meta: FileMeta | None = FileMeta(
                     path="static/images/",
                     filename="empty_profile",
-                    extension=".png",
+                    extension="png",
                     size=3072,  # 3kb
                 )
 
