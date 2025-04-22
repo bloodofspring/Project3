@@ -45,6 +45,11 @@ def main():
     if 'user' not in session:
         return redirect(url_for('login'))
 
+    try:
+        user = AppUser.select().where(AppUser.login == session['user'])[0]
+    except IndexError:
+        return f"Пользователя с ником {session['user']} не существует", 404
+
     five_unfollowed_dudes = ['Johny Depp', 'Elon Musk', 'bloodofspring', 'SIlD', 'GodGamer3000']
     return render_template("main.html", dudes=five_unfollowed_dudes, user=session['user'])
 
