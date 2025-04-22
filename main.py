@@ -195,6 +195,7 @@ def create_post():
     # Получаем текст поста
     post_text = request.form.get('text', '').strip()
 
+
     photo_path = None
     if 'photo' in request.files:
         file = request.files['photo']
