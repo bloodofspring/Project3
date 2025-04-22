@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Yourself</title>
+    <link rel="stylesheet" href="static/css/about.css">
+</head>
+<body>
+    <h1>Tell Us About Yourself</h1>
+
+    <form class="about-form" id="aboutForm" method="POST">
+        <label for="about-text"><strong>Write about yourself:</strong></label>
+        <div class="char-count"><span id="char-counter">0</span>/500 characters</div>
+        <textarea id="about-text" name="about_text" placeholder="Share something interesting about yourself..." maxlength="500"></textarea>
+
+        <div class="buttons-container">
+            <a href="/profile" class="cancel-btn">Cancel</a>
+            <button type="submit" class="submit-btn">Save Information</button>
+        </div>
+    </form>
+
+    <script>
+        // Character counter
+        const textarea = document.getElementById('about-text');
+        const charCounter = document.getElementById('char-counter');
+
+        textarea.addEventListener('input', function() {
+            charCounter.textContent = this.value.length;
+        });
+
+        // Form submission with fetch API
+        document.getElementById('aboutForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+
+            try {
+                const response = await fetch('/save-about', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    window.location.href = '/profile';
+                } else {
+                    alert('Error saving information');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred');
+            }
+        });
+    </script>
+</body>
+</html>

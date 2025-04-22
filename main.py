@@ -50,16 +50,20 @@ def main():
     except IndexError:
         return f"Пользователя с ником {session['user']} не существует", 404
 
-    five_unfollowed_dudes = ['Johny Depp', 'Elon Musk', 'bloodofspring', 'SIlD', 'GodGamer3000']
-    return render_template("main.html", dudes=five_unfollowed_dudes, user=session['user'])
+    return render_template("main.html", user=user)
 
 
 @application.route("/profile")
-def profile_page():
+def profile():
     if 'user' not in session:
         return redirect(url_for('login'))
 
-    return render_template("profile.html")
+    try:
+        user = AppUser.select().where(AppUser.login == session['user'])[0]
+    except IndexError:
+        return f"Пользователя с ником {session['user']} не существует", 404
+
+    return render_template("profile.html", user=user)
 
 
 @application.route('/register', methods=['GET', 'POST'])
@@ -157,6 +161,20 @@ def login():
             return render_template('login.html', error="Неверный логин или пароль")
 
     return render_template('login.html')
+
+
+@application.route('/about')
+def about():
+    return render_template('about.html')
+    about_text = request.form.get('about_text')
+    print(about_text)
+
+
+@application.route('/save-about', methods=['POST'])
+def save_about():
+    about_text = request.form.get('about_text')
+    print(f"Saved about text: {about_text}")
+    return redirect(url_for('profile'))
 
 
 @application.route('/success')
