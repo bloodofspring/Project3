@@ -188,16 +188,7 @@ Header START -->
             <div class="collapse navbar-collapse" id="navbarCollapse">
 
                 <!-- Nav Search START -->
-                <div class="nav mt-3 mt-lg-0 flex-nowrap align-items-center px-4 px-lg-0">
-                    <div class="nav-item w-100">
-                        <form class="rounded position-relative">
-                            <input class="form-control ps-5 bg-light" type="search" placeholder="Search..."
-                                   aria-label="Search">
-                            <button class="btn bg-transparent px-2 py-0 position-absolute top-50 start-0 translate-middle-y"
-                                    type="submit"></button>
-                        </form>
-                    </div>
-                </div>
+
                 <!-- Nav Search END -->
 
 
@@ -406,152 +397,127 @@ Header END -->
                 <!-- Share feed END -->
 
                 <!-- Card feed item START -->
-                {% for post in posts%}
-                <form id="commentForm1" class="position-relative flex-grow-1" data-post-id="{{ post.id }}">
-                    <!-- ... остальные поля формы ... -->
-                </form>
-                <div class="card">
-                    <!-- Card header START -->
+                {% for post in posts %}
+                <div class="card mb-3">
+                    <!-- Заголовок карточки -->
                     <div class="card-header border-0 pb-0">
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="d-flex align-items-center">
-                                <!-- Avatar -->
+                                <!-- Аватар автора -->
                                 <div class="avatar avatar-story me-2">
-                                    <a href="#!"> <img class="avatar-img rounded-circle"
-                                                       src="{{  post.author.profile_data.profile_photo.get_full_path()  }}"
-                                                       alt=""> </a>
+                                    <img class="avatar-img rounded-circle"
+                                         src="{{ post.author.profile_data.profile_photo.get_full_path() }}"
+                                         alt="Автор">
                                 </div>
-                                <!-- Info -->
+                                <!-- Имя автора -->
                                 <div>
-                                    <div class="nav nav-divider">
-                                        <h6 class="nav-item card-title mb-0"><p> {{ post.author.profile_data.first_name
-                                            + " " + post.author.profile_data.last_name }} </p></h6>
-
-                                    </div>
+                                    <h6 class="card-title mb-0">
+                                        {{ post.author.profile_data.first_name }}
+                                        {{ post.author.profile_data.last_name }}
+                                    </h6>
                                 </div>
                             </div>
-                            <!-- Card feed action dropdown START -->
-
-                            <!-- Card feed action dropdown END -->
                         </div>
                     </div>
-                    <!-- Card header END -->
-                    <!-- Card body START -->
+
+                    <!-- Тело карточки -->
                     <div class="card-body">
-                        {% if post.text != None %}
+                        <!-- Текст поста -->
+                        {% if post.text %}
                         <p>{{ post.text }}</p>
-                        {% else %}
-                        <p></p>
                         {% endif %}
-                        <!-- Card img -->
 
-                        <img class="card-img" src="{{  post.get_first_file_path()  }}" alt="Post">
-                        <p></p>
+                        <!-- Изображение поста -->
+                        {% if post.get_first_file_path() %}
+                        <img class="card-img mb-3" src="{{ post.get_first_file_path() }}" alt="Пост">
+                        {% endif %}
 
-                        <!-- Add comment -->
+                        <!-- Форма комментария -->
                         <div class="d-flex mb-3">
-                            <!-- Avatar -->
                             <div class="avatar avatar-xs me-2">
                                 <img class="avatar-img rounded-circle"
-                                     src="{{ user.profile_data.profile_photo.get_full_path() }}" alt="">
+                                     src="{{ user.profile_data.profile_photo.get_full_path() }}"
+                                     alt="Вы">
                             </div>
-                            <!-- Comment box with fixed height and send button -->
-                            <form id="commentForm" class="position-relative flex-grow-1">
+                            <form class="comment-form" data-post-id="{{ post.id }}">
                                 <div class="input-group" style="height: 38px;">
-                                    <input type="text" id="commentText" class="form-control border-end-0"
-                                           placeholder="Напишите комментарий..." maxlength="255"
-                                           style="resize: none; height: 100%; border-radius: 20px 0 0 20px;">
+                                    <input type="text" class="comment-input form-control border-end-0"
+                                           placeholder="Напишите комментарий..."
+                                           style="border-radius: 20px 0 0 20px;">
                                     <button type="submit" class="btn btn-primary border-start-0"
-                                            style="border-radius: 0 20px 20px 0; height: 100%;" disabled>
+                                            style="border-radius: 0 20px 20px 0;" disabled>
                                         <i class="bi bi-send-fill"></i>
                                     </button>
                                 </div>
                             </form>
                         </div>
 
-                        <script>
-                            document.addEventListener('DOMContentLoaded', function() {
-                                const textInput = document.getElementById('commentText');
-                                const submitButton = document.querySelector('#commentForm1 button');
-                                const form = document.getElementById('commentForm1');
-
-
-                                textInput.addEventListener('input', function() {
-                                    submitButton.disabled = this.value.trim().length === 0;
-                                });
-
-
-                                form.addEventListener('submit', function(e) {
-                                    e.preventDefault();
-                                    const commentText = textInput.value.trim();
-
-                                    if (commentText) {
-                                        // Получаем ID поста из атрибута data-post-id формы
-                                        const postId = form.getAttribute('data-post-id');
-
-
-                                        fetch('/add_comment', {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                            },
-                                            body: JSON.stringify({
-                                                text: commentText,
-                                                user: 'Ученик',
-                                                post_id: postId  // Добавляем ID поста в отправляемые данные
-                                            })
-                                        })
-                                        .then(response => response.json())
-                                        .then(data => {
-                                            if (data.success) {
-                                                textInput.value = '';
-                                                submitButton.disabled = true;
-                                                console.log('Комментарий отправлен:', data);
-                                            }
-                                        })
-                                        .catch(error => {
-                                            console.error('Ошибка:', error);
-                                        });
-                                    }
-                                });
-                            });
-                        </script>
-
-                        <li class="comment-item">
-                            {% for item in dudes%}
-                            <div class="d-flex">
-                                <!-- Avatar -->
-                                <div class="avatar avatar-xs">
-                                    <a href="#!"><img class="avatar-img rounded-circle"
-                                                      src="static/images/empty_profile.png" alt=""></a>
+                        <!-- Список комментариев -->
+                        <div class="comments-list">
+                            {% for comment in post.comments %}
+                            <div class="d-flex mb-2">
+                                <div class="avatar avatar-xs me-2">
+                                    <img class="avatar-img rounded-circle"
+                                         src="{{ comment.author.profile_data.profile_photo.get_full_path() }}"
+                                         alt="{{ comment.author.username }}">
                                 </div>
-                                <!-- Comment by -->
-                                <div class="ms-2">
-                                    <div class="bg-light p-3 rounded">
-                                        <div class="d-flex justify-content-between">
-                                            <h6 class="mb-1"><a href="#!"> Frances Guerrero </a></h6>
-
-                                        </div>
-                                        <p class="small mb-0">Removed demands expense account in outward tedious do.
-                                            Particular way thoroughly unaffected projection.</p>
+                                <div>
+                                    <div class="bg-light p-2 rounded">
+                                        <strong>{{ comment.author.username }}</strong>
+                                        <p class="mb-0">{{ comment.text }}</p>
                                     </div>
-                                    <p></p>
-
-
                                 </div>
                             </div>
                             {% endfor %}
-                        </li>
-                        <!-- Comment item END -->
-                        </ul>
-                        <!-- Comment wrap END -->
+                        </div>
                     </div>
-                    <!-- Card body END -->
-                    <!-- Card footer START -->
-
-                    <!-- Card footer END -->
                 </div>
                 {% endfor %}
+
+                <script>
+                    // Обработчик для всех форм комментариев
+                    document.addEventListener('DOMContentLoaded', function() {
+                        document.querySelectorAll('.comment-form').forEach(form => {
+                            const input = form.querySelector('.comment-input');
+                            const button = form.querySelector('button');
+
+                            // Включение/выключение кнопки при вводе текста
+                            input.addEventListener('input', function() {
+                                button.disabled = this.value.trim() === '';
+                            });
+
+                            // Отправка формы
+                            form.addEventListener('submit', async function(e) {
+                                e.preventDefault();
+                                const text = input.value.trim();
+                                const postId = form.getAttribute('data-post-id');
+
+                                if (text) {
+                                    try {
+                                        const response = await fetch('/add_comment', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                text: text,
+                                                post_id: postId
+                                            })
+                                        });
+
+                                        if (response.ok) {
+                                            input.value = ''; // Очищаем поле ввода
+                                            button.disabled = true;
+
+                                            // Можно добавить автоматическое обновление комментариев
+                                            location.reload(); // Простейший вариант - перезагрузка страницы
+                                        }
+                                    } catch (error) {
+                                        console.error('Ошибка при отправке:', error);
+                                    }
+                                }
+                            });
+                        });
+                    });
+                </script>
                 <!-- Card feed item END -->
 
 
@@ -1397,7 +1363,7 @@ Header END -->
         </div>
     </div>
     <!-- Modal create events END -->
-
+</div>
 
 </body>
 </html>

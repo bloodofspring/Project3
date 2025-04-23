@@ -44,7 +44,7 @@ class Comments(BaseModel):
     author = ForeignKeyField(AppUser, backref="comments", null=False)
     reply_to_comment = ForeignKeyField("self", backref="replies", null=True, default=None)
     text = CharField(null=True, max_length=255)
-    likes = IntegerField(null=False)
+    likes = IntegerField(null=False, default=0)
 
     def dict(self, show_max_replies: int = 50):
         return {

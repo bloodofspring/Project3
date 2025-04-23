@@ -26,14 +26,6 @@ application.config['SECRET_KEY'] = os.environ["app_secret_key"]
 application.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Максимальный размер загружаемых файлов
 application.config['ALLOWED_EXTENSIONS'] = {".jpg", ".jpeg", ".png"}
 
-# login_manager = LoginManager()
-# login_manager.init_app(application)
-
-
-# @login_manager.user_loader
-# def load_user(user_id):
-#     db_sess = db_session.create_session()
-#     return db_sess.query(User).get(user_id)
 
 
 @application.route("/")
@@ -50,22 +42,20 @@ def main():
         user = AppUser.select().where(AppUser.login == session['user'])[0]
     except IndexError:
         return f"Пользователя с ником {session['user']} не существует", 404
-
     try:
         posts_from_user = Post.select().where(Post.author == user)
     except (Exception,) as e:
         print(f"Cannot get posts of user {user.login}: {e}")
+        posts_from_user = []
 
 
     try:
-        posts_from_other_users = Post.select().where(Post.author != user)  # ToDo: я просто заменю одну на другую, тк тестировать проще
+        posts_from_other_users = Post.select().where(Post.author != user)
     except (Exception,) as e:
+        posts_from_other_users = []
         print(f"Cannot get posts of user {user.login}: {e}")
 
-    lst = [i for i in posts_from_other_users]
-    random.shuffle(lst)
-
-    return render_template("main.html", user=user, posts=posts_from_user)
+    return render_template("main.html", user=user, posts_count=len(posts_from_user), posts=posts_from_other_users)
 
 
 @application.route("/profile")
@@ -115,7 +105,7 @@ def register():
                 last_name=request.form['last_name'],
                 profile_photo=file_meta,
                 birth_date=datetime.datetime(
-                    year=int(request.form['birth_date'].split("-")[0]),
+                    year=int(request.form['birth_date'].split("-")[0]) % 10000,
                     month=int(request.form['birth_date'].split("-")[1]),
                     day=int(request.form['birth_date'].split("-")[2]),
                 ),
