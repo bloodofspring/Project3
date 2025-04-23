@@ -76,6 +76,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
 
     <!-- Plugins CSS -->
     <link rel="stylesheet" type="text/css" href="static/css/main.css">
@@ -184,16 +188,7 @@ Header START -->
             <div class="collapse navbar-collapse" id="navbarCollapse">
 
                 <!-- Nav Search START -->
-                <div class="nav mt-3 mt-lg-0 flex-nowrap align-items-center px-4 px-lg-0">
-                    <div class="nav-item w-100">
-                        <form class="rounded position-relative">
-                            <input class="form-control ps-5 bg-light" type="search" placeholder="Search..."
-                                   aria-label="Search">
-                            <button class="btn bg-transparent px-2 py-0 position-absolute top-50 start-0 translate-middle-y"
-                                    type="submit"></button>
-                        </form>
-                    </div>
-                </div>
+
                 <!-- Nav Search END -->
 
 
@@ -252,41 +247,25 @@ Header END -->
                                         <!-- Avatar -->
                                         <div class="avatar avatar-lg mt-n5 mb-3">
                                             <a href="#!"><img class="avatar-img rounded border border-white border-3"
-                                                              src="static/images/empty_profile.png" alt=""></a>
+                                                              src="{{  user.profile_data.profile_photo.get_full_path()  }}"
+                                                              alt=""></a>
                                         </div>
                                         <!-- Info -->
-                                        <h5 class="mb-0"><a href="#!">Sam Lanson </a></h5>
-                                        <small>Web Developer at Webestica</small>
-                                        <p class="mt-3">I'd love to change the world, but they won’t give me the source
-                                            code.</p>
+                                        <h5 class="mb-0"> {{ user.profile_data.first_name + " " +
+                                            user.profile_data.last_name }} </h5>
+                                        <p class="mt-3">{{ user.profile_data.get_about }}</p>
 
                                         <!-- User stat START -->
                                         <div class="hstack gap-2 gap-xl-3 justify-content-center">
                                             <!-- User stat item -->
                                             <div>
-                                                <h6 class="mb-0">256</h6>
+                                                <h6 class="mb-0">{{ posts_count }}</h6>
                                                 <small>Post</small>
-                                            </div>
-                                            <!-- Divider -->
-                                            <div class="vr"></div>
-                                            <!-- User stat item -->
-                                            <div>
-                                                <h6 class="mb-0">52</h6>
-                                                <small>Followers</small>
-                                            </div>
-                                            <!-- Divider -->
-                                            <div class="vr"></div>
-                                            <!-- User stat item -->
-                                            <div>
-                                                <h6 class="mb-0">365</h6>
-                                                <small>Following</small>
                                             </div>
                                         </div>
                                         <!-- User stat END -->
                                     </div>
 
-                                    <!-- Divider -->
-                                    <hr>
 
                                     <!-- Side Nav START -->
 
@@ -317,166 +296,228 @@ Header END -->
 
 
                 <!-- Share feed START -->
-                <div class="card card-body" id="postCard-52">
+                <div class="card card-body position-relative" id="postCard-52">
+                    <button id="submitBtn-52"
+                            class="btn btn-primary btn-sm position-absolute top-0 end-0 mt-2 me-2 d-none"
+                            onclick="submitPost(52)">
+                        Опубликовать
+                    </button>
+
                     <div class="d-flex mb-3">
                         <!-- Avatar -->
                         <div class="avatar avatar-xs me-2">
-                            <a href="#"> <img class="avatar-img rounded-circle" src="static/images/empty_profile.png"
-                                              alt=""> </a>
+                            <a href="#"><img class="avatar-img rounded-circle"
+                                             src="{{ user.profile_data.profile_photo.get_full_path() }}" alt=""></a>
                         </div>
-                        <!-- Post input -->
                         <form class="w-100">
-                            <textarea class="form-control pe-4 border-0" rows="2" data-autoresize=""
-                                      placeholder="Share your thoughts..."></textarea>
+            <textarea id="postText-52" class="form-control pe-4 border-0" rows="2" data-autoresize=""
+                      placeholder="Share your thoughts..." oninput="checkContent(52)" maxlength="255"></textarea>
                         </form>
                     </div>
-                    <!-- Share feed toolbar START -->
+
                     <ul class="nav nav-pills nav-stack small fw-normal">
                         <li class="nav-item">
-                            <!-- Скрытый input для выбора файла -->
-                            <input type="file" id="fileInput-{{ unique_id }}" accept="image/*" style="display: none;">
-                            <!-- Модифицированная кнопка Photo -->
+                            <input type="file" id="fileInput-52" accept="image/*" style="display: none;">
                             <a class="nav-link bg-light py-1 px-2 mb-0" href="#"
-                               onclick="document.getElementById('fileInput-{{ unique_id }}').click()">
+                               onclick="document.getElementById('fileInput-52').click()">
                                 Photo
                             </a>
                         </li>
                     </ul>
-                    <!-- Share feed toolbar END -->
+                    <div id="photoPreviewContainer-52" class="mt-3 d-none"></div>
                 </div>
 
                 <script>
-                    // Обработчик для выбранного изображения
-                    document.getElementById('fileInput-{{ unique_id }}').addEventListener('change', function(event) {
-                      const file = event.target.files[0];
-                      if (file) {
-                        console.log("Выбран файл:", file.name);
+                    let selectedFile = null;
 
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                          const preview = document.createElement('div');
-                          preview.innerHTML = `
-                            <div class="mt-3">
-                              <img src="${e.target.result}" class="img-thumbnail" style="max-height: 150px;">
-                              <p class="small mt-1">${file.name}</p>
-                            </div>
-                          `;
-                          // Вставляем превью в конкретную карточку
-                          document.getElementById('postCard-52').appendChild(preview);
-                        };
-                        reader.readAsDataURL(file);
-                      }
+                    document.getElementById('fileInput-52').addEventListener('change', function(event) {
+                        const file = event.target.files[0];
+                        if (file && file.type.match('image.*')) {
+                            selectedFile = file;
+
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                const previewContainer = document.getElementById('photoPreviewContainer-52');
+                                previewContainer.innerHTML = `
+                                    <div class="position-relative">
+                                        <img src="${e.target.result}" class="img-thumbnail" style="max-height: 300px; width: auto;">
+                                        <button class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1"
+                                                onclick="removePhoto(52)" title="Удалить фото">
+                                            ×
+                                        </button>
+                                    </div>
+                                `;
+                                previewContainer.classList.remove('d-none');
+                                checkContent(52);
+                            };
+                            reader.readAsDataURL(file);
+                        }
                     });
+
+                    function checkContent(postId) {
+                        const text = document.getElementById(`postText-${postId}`).value.trim();
+                        const hasPhoto = !document.getElementById(`photoPreviewContainer-${postId}`).classList.contains('d-none');
+                        const submitBtn = document.getElementById(`submitBtn-${postId}`);
+
+                        submitBtn.classList.toggle('d-none', !(text || hasPhoto));
+                    }
+
+                    function removePhoto(postId) {
+                        document.getElementById(`photoPreviewContainer-${postId}`).innerHTML = '';
+                        document.getElementById(`photoPreviewContainer-${postId}`).classList.add('d-none');
+                        document.getElementById(`fileInput-${postId}`).value = '';
+                        selectedFile = null;
+                        checkContent(postId);
+                    }
+
+                    async function submitPost(postId) {
+                        const formData = new FormData();
+                        const text = document.getElementById(`postText-${postId}`).value;
+
+                        if (text) formData.append('text', text);
+                        if (selectedFile) formData.append('photo', selectedFile);
+
+                        try {
+                            const response = await fetch('/create_post', {
+                                method: 'POST',
+                                body: formData
+                            });
+
+                            if (response.ok) {
+                                location.reload();
+                            } else {
+                                alert('Ошибка при публикации');
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                            alert('Ошибка сети');
+                        }
+                    }
                 </script>
                 <!-- Share feed END -->
 
                 <!-- Card feed item START -->
-                {% for item in dudes%}
-                <div class="card">
-                    <!-- Card header START -->
+                {% for post in posts %}
+                <div class="card mb-3">
+                    <!-- Заголовок карточки -->
                     <div class="card-header border-0 pb-0">
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="d-flex align-items-center">
-                                <!-- Avatar -->
+                                <!-- Аватар автора -->
                                 <div class="avatar avatar-story me-2">
-                                    <a href="#!"> <img class="avatar-img rounded-circle"
-                                                       src="static/images/empty_profile.png" alt=""> </a>
+                                    <img class="avatar-img rounded-circle"
+                                         src="{{ post.author.profile_data.profile_photo.get_full_path() }}"
+                                         alt="Автор">
                                 </div>
-                                <!-- Info -->
+                                <!-- Имя автора -->
                                 <div>
-                                    <div class="nav nav-divider">
-                                        <h6 class="nav-item card-title mb-0"><a href="#!"> Lori Ferguson </a></h6>
-
-                                    </div>
-                                    <p class="mb-0 small">Web Developer at Webestica</p>
+                                    <h6 class="card-title mb-0">
+                                        {{ post.author.profile_data.first_name }}
+                                        {{ post.author.profile_data.last_name }}
+                                    </h6>
                                 </div>
                             </div>
-                            <!-- Card feed action dropdown START -->
-
-                            <!-- Card feed action dropdown END -->
                         </div>
                     </div>
-                    <!-- Card header END -->
-                    <!-- Card body START -->
+
+                    <!-- Тело карточки -->
                     <div class="card-body">
-                        <p>I'm thrilled to share that I've completed a graduate certificate course in project management
-                            with the president's honor roll.</p>
-                        <!-- Card img -->
-                        <!--						<img class="card-img" src="assets/images/post/3by2/01.jpg" alt="Post">-->
-                        <!-- Feed react START -->
+                        <!-- Текст поста -->
+                        {% if post.text %}
+                        <p>{{ post.text }}</p>
+                        {% endif %}
 
-                        <!-- Feed react END -->
+                        <!-- Изображение поста -->
+                        {% if post.get_first_file_path() %}
+                        <img class="card-img mb-3" src="{{ post.get_first_file_path() }}" alt="Пост">
+                        {% endif %}
 
-                        <!-- Add comment -->
+                        <!-- Форма комментария -->
                         <div class="d-flex mb-3">
-                            <!-- Avatar -->
                             <div class="avatar avatar-xs me-2">
-                                <a href="#!"> <img class="avatar-img rounded-circle"
-                                                   src="static/images/empty_profile.png" alt=""> </a>
+                                <img class="avatar-img rounded-circle"
+                                     src="{{ user.profile_data.profile_photo.get_full_path() }}"
+                                     alt="Вы">
                             </div>
-                            <!-- Comment box  -->
-                            <form class="nav nav-item w-100 position-relative">
-                                <textarea data-autoresize="" class="form-control pe-5 bg-light" rows="1"
-                                          placeholder="Add a comment..."></textarea>
-                                <button class="nav-link bg-transparent px-3 position-absolute top-50 end-0 translate-middle-y border-0"
-                                        type="submit">
-                                    <i class="bi bi-send-fill"> </i>
-                                </button>
+                            <form class="comment-form" data-post-id="{{ post.id }}">
+                                <div class="input-group" style="height: 38px;">
+                                    <input type="text" class="comment-input form-control border-end-0"
+                                           placeholder="Напишите комментарий..."
+                                           style="border-radius: 20px 0 0 20px;">
+                                    <button type="submit" class="btn btn-primary border-start-0"
+                                            style="border-radius: 0 20px 20px 0;" disabled>
+                                        <i class="bi bi-send-fill"></i>
+                                    </button>
+                                </div>
                             </form>
                         </div>
-                        <!-- Comment wrap START -->
-                        <ul class="comment-wrap list-unstyled">
-                            <!-- Comment item START -->
-                            <!-- Comment item END -->
-                            <!-- Comment item START -->
 
-                            <!-- Comment item END -->
-                        </ul>
-                        <!-- Load more replies -->
-
-                        <!-- Comment item nested END -->
-                        </li>
-                        <!-- Comment item END -->
-                        <!-- Comment item START -->
-                        <li class="comment-item">
-                            {% for item in dudes%}
-                            <div class="d-flex">
-                                <!-- Avatar -->
-                                <div class="avatar avatar-xs">
-                                    <a href="#!"><img class="avatar-img rounded-circle"
-                                                      src="static/images/empty_profile.png" alt=""></a>
+                        <!-- Список комментариев -->
+                        <div class="comments-list">
+                            {% for comment in post.comments %}
+                            <div class="d-flex mb-2">
+                                <div class="avatar avatar-xs me-2">
+                                    <img class="avatar-img rounded-circle"
+                                         src="{{ comment.author.profile_data.profile_photo.get_full_path() }}"
+                                         alt="{{ comment.author.username }}">
                                 </div>
-                                <!-- Comment by -->
-                                <div class="ms-2">
-                                    <div class="bg-light p-3 rounded">
-                                        <div class="d-flex justify-content-between">
-                                            <h6 class="mb-1"><a href="#!"> Frances Guerrero </a></h6>
-
-                                        </div>
-                                        <p class="small mb-0">Removed demands expense account in outward tedious do.
-                                            Particular way thoroughly unaffected projection.</p>
+                                <div>
+                                    <div class="bg-light p-2 rounded">
+                                        <strong>{{ comment.author.username }}</strong>
+                                        <p class="mb-0">{{ comment.text }}</p>
                                     </div>
-                                    <!-- Comment react -->
-                                    <ul class="nav nav-divider py-2 small">
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="#!"> Like (3)</a>
-                                        </li>
-                                    </ul>
-
                                 </div>
                             </div>
                             {% endfor %}
-                        </li>
-                        <!-- Comment item END -->
-                        </ul>
-                        <!-- Comment wrap END -->
+                        </div>
                     </div>
-                    <!-- Card body END -->
-                    <!-- Card footer START -->
-
-                    <!-- Card footer END -->
                 </div>
                 {% endfor %}
+
+                <script>
+                    // Обработчик для всех форм комментариев
+                    document.addEventListener('DOMContentLoaded', function() {
+                        document.querySelectorAll('.comment-form').forEach(form => {
+                            const input = form.querySelector('.comment-input');
+                            const button = form.querySelector('button');
+
+                            // Включение/выключение кнопки при вводе текста
+                            input.addEventListener('input', function() {
+                                button.disabled = this.value.trim() === '';
+                            });
+
+                            // Отправка формы
+                            form.addEventListener('submit', async function(e) {
+                                e.preventDefault();
+                                const text = input.value.trim();
+                                const postId = form.getAttribute('data-post-id');
+
+                                if (text) {
+                                    try {
+                                        const response = await fetch('/add_comment', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                text: text,
+                                                post_id: postId
+                                            })
+                                        });
+
+                                        if (response.ok) {
+                                            input.value = ''; // Очищаем поле ввода
+                                            button.disabled = true;
+
+                                            // Можно добавить автоматическое обновление комментариев
+                                            location.reload(); // Простейший вариант - перезагрузка страницы
+                                        }
+                                    } catch (error) {
+                                        console.error('Ошибка при отправке:', error);
+                                    }
+                                }
+                            });
+                        });
+                    });
+                </script>
                 <!-- Card feed item END -->
 
 
@@ -497,50 +538,6 @@ Header END -->
 
             <!-- Right sidebar START -->
             <div class="col-lg-3">
-                <div class="row g-4">
-                    <!-- Card follow START -->
-                    <div class="col-sm-6 col-lg-12">
-                        <div class="card">
-                            <!-- Card header START -->
-                            <div class="card-header pb-0 border-0">
-                                <h5 class="card-title mb-0">Who to follow</h5>
-                            </div>
-                            <!-- Card header END -->
-                            <!-- Card body START -->
-                            <div class="card-body">
-                                <!-- Connection item START -->
-                                {% for item in dudes %}
-                                <div class="hstack gap-2 mb-3">
-                                    <!-- Avatar -->
-                                    <div class="avatar">
-                                        <a href="#!"><img class="avatar-img rounded-circle"
-                                                          src="static/images/empty_profile.png" alt=""></a>
-                                    </div>
-                                    <!-- Title -->
-                                    <div class="overflow-hidden">
-                                        <a class="h6 mb-0" href="#!">{{item}} </a>
-
-                                    </div>
-                                    <!-- Button -->
-                                    <a class="btn btn-primary-soft rounded-circle icon-md ms-auto" href="#"><i
-                                            class="fa-solid fa-plus"> </i></a>
-                                </div>
-                                {% endfor %}
-                                <!-- Connection item END -->
-
-
-                                <!-- View more button -->
-
-                            </div>
-                            <!-- Card body END -->
-                        </div>
-                    </div>
-                    <!-- Card follow START -->
-
-                    <!-- Card News START -->
-
-                    <!-- Card News END -->
-                </div>
             </div>
             <!-- Right sidebar END -->
 
@@ -1366,7 +1363,7 @@ Header END -->
         </div>
     </div>
     <!-- Modal create events END -->
-
+</div>
 
 </body>
 </html>

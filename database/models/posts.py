@@ -28,6 +28,11 @@ class Post(BaseModel):
     def json(self, max_comments: int | None = None, show_max_replies: int | None = None):
         return json.dumps(self.dict(max_comments=max_comments, show_max_replies=show_max_replies))
 
+    def get_first_file_path(self) -> str | None:
+        try:
+            return self.media_rel[0].media.get_full_path()
+        except IndexError:
+            return None
 
 class PostsToMedia(BaseModel):
     post = ForeignKeyField(Post, backref="media_rel", null=False)
@@ -38,8 +43,8 @@ class Comments(BaseModel):
     post = ForeignKeyField(Post, backref="comments", null=False)
     author = ForeignKeyField(AppUser, backref="comments", null=False)
     reply_to_comment = ForeignKeyField("self", backref="replies", null=True, default=None)
-    text = CharField(null=False)
-    likes = IntegerField(null=False)
+    text = CharField(null=True, max_length=255)
+    likes = IntegerField(null=False, default=0)
 
     def dict(self, show_max_replies: int = 50):
         return {

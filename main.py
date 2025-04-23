@@ -2,14 +2,15 @@ import datetime
 import os
 
 from dotenv import load_dotenv
-from flask import Flask, render_template, redirect, url_for, request, session, flash
-
+from flask import Flask, render_template, redirect, url_for, request, session, flash, jsonify
+from werkzeug.utils import secure_filename
+import random
 
 import api
 import database
 import util
 from database.create import init_db
-from database.models import UserProfile, AppUser, FileMeta
+from database.models import UserProfile, AppUser, FileMeta, Post, PostsToMedia, Comments
 
 import logging
 
@@ -25,14 +26,6 @@ application.config['SECRET_KEY'] = os.environ["app_secret_key"]
 application.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Максимальный размер загружаемых файлов
 application.config['ALLOWED_EXTENSIONS'] = {".jpg", ".jpeg", ".png"}
 
-# login_manager = LoginManager()
-# login_manager.init_app(application)
-
-
-# @login_manager.user_loader
-# def load_user(user_id):
-#     db_sess = db_session.create_session()
-#     return db_sess.query(User).get(user_id)
 
 
 @application.route("/")
@@ -45,16 +38,37 @@ def main():
     if 'user' not in session:
         return redirect(url_for('login'))
 
-    five_unfollowed_dudes = ['Johny Depp', 'Elon Musk', 'bloodofspring', 'SIlD', 'GodGamer3000']
-    return render_template("main.html", dudes=five_unfollowed_dudes, user=session['user'])
+    try:
+        user = AppUser.select().where(AppUser.login == session['user'])[0]
+    except IndexError:
+        return f"Пользователя с ником {session['user']} не существует", 404
+    try:
+        posts_from_user = Post.select().where(Post.author == user)
+    except (Exception,) as e:
+        print(f"Cannot get posts of user {user.login}: {e}")
+        posts_from_user = []
+
+
+    try:
+        posts_from_other_users = Post.select().where(Post.author != user)
+    except (Exception,) as e:
+        posts_from_other_users = []
+        print(f"Cannot get posts of user {user.login}: {e}")
+
+    return render_template("main.html", user=user, posts_count=len(posts_from_user), posts=posts_from_other_users)
 
 
 @application.route("/profile")
-def profile_page():
+def profile():
     if 'user' not in session:
         return redirect(url_for('login'))
 
-    return render_template("profile.html")
+    try:
+        user = AppUser.select().where(AppUser.login == session['user'])[0]
+    except IndexError:
+        return f"Пользователя с ником {session['user']} не существует", 404
+
+    return render_template("profile.html", user=user)
 
 
 @application.route('/register', methods=['GET', 'POST'])
@@ -79,14 +93,19 @@ def register():
                 avatar.save(os.path.join("static/users/profile_photos", file_meta.filename + "." + file_meta.extension))
                 file_meta.size = os.path.getsize(f"static/users/profile_photos/{file_meta.filename}.{file_meta.extension}")
             else:
-                file_meta: FileMeta | None = None
+                file_meta: FileMeta | None = FileMeta(
+                    path="static/images/",
+                    filename="empty_profile",
+                    extension="png",
+                    size=3072,  # 3kb
+                )
 
             user_data: UserProfile = UserProfile(
                 first_name=request.form['first_name'],
                 last_name=request.form['last_name'],
                 profile_photo=file_meta,
                 birth_date=datetime.datetime(
-                    year=int(request.form['birth_date'].split("-")[0]),
+                    year=int(request.form['birth_date'].split("-")[0]) % 10000,
                     month=int(request.form['birth_date'].split("-")[1]),
                     day=int(request.form['birth_date'].split("-")[2]),
                 ),
@@ -149,10 +168,103 @@ def login():
     return render_template('login.html')
 
 
-@application.route('/success')
-def success():
-    return "Регистрация прошла успешно!"
+@application.route('/about')
+def about():
+    return render_template('about.html')
+    about_text = request.form.get('about_text')
+    print(about_text)
 
+
+@application.route('/save-about', methods=['POST'])
+def save_about():
+    about_text = request.form.get('about_text')
+
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    try:
+        user: AppUser = AppUser.select().where(AppUser.login == session['user'])[0]
+    except IndexError:
+        return f"Пользователя с ником {session['user']} не существует", 404
+
+    with database.connect_to_database():
+        user.profile_data.about = about_text
+        user.profile_data.save()
+
+    return redirect(url_for('profile'))
+
+
+@application.route('/create_post', methods=['POST'])
+def create_post():
+    post_text = request.form.get('text', None)
+
+    if request.files.get("photo"):
+        photo = request.files.get("photo")
+
+        if not os.path.exists("static/uploads"):
+            os.mkdir("static/uploads")
+
+        file_meta: FileMeta | None = FileMeta(
+            path="static/uploads",
+            extension=photo.filename.rsplit('.', 1)[1].lower(),
+            size=-1,
+        )
+
+        photo.save(os.path.join("static/uploads", file_meta.filename + "." + file_meta.extension))
+        file_meta.size = os.path.getsize(f"static/uploads/{file_meta.filename}.{file_meta.extension}")
+    else:
+        file_meta: FileMeta | None = None
+
+    try:
+        with database.connect_to_database():
+            user = AppUser.select().where(AppUser.login == session["user"])[0]
+
+            new_post = Post(
+                author=user,
+                text=post_text,
+            )
+            new_post.save()
+
+            if file_meta is not None:
+                file_meta.save()
+                PostsToMedia.create(
+                    post=new_post,
+                    media=file_meta
+                )
+
+            return redirect(url_for("main"))
+    except IndexError:
+        return redirect(url_for("login"))
+    except Exception as e:
+        print(f"Error creating post: {e}")
+        return redirect(url_for("main"))
+
+
+@application.route('/add_comment', methods=['POST'])
+def add_comment():
+    data = request.get_json()
+    text = data.get('text', None)
+
+    if text is None:
+        return redirect(url_for("main"))
+
+    try:
+        user = AppUser.select().where(AppUser.login == session["user"])[0]
+
+        post = Post.get_by_id(data.get('post_id'))
+        if not post:
+            raise Exception("Post not found")
+
+        Comments.create(
+            post=post,
+            author=user,
+            text=text,
+        )
+    except Exception as e:
+        print(f"An error while creating comment: {e}")
+        return redirect(url_for("main"))
+
+    return redirect(url_for("main"))
 
 def main():
     init_db()

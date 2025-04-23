@@ -10,13 +10,14 @@
 <form action="/login" method="POST">
     <div class="form-group">
         <label for="username">Логин</label>
-        <input type="text" id="username" name="username" required placeholder="Введите ваш логин">
+        <input type="text" id="username" name="username" maxlength="32" required placeholder="Введите ваш логин">
     </div>
     <div class="form-group">
         <label for="password">Пароль</label>
-        <input type="password" id="password" name="password" required placeholder="Введите ваш пароль">
+        <input type="password" id="password" name="password" maxlength="32" required placeholder="Введите ваш пароль">
     </div>
     <button type="submit">Войти</button>
+    <p>Нет аккаунта? <a href="/register">Зарегистрируйся, братик!</a></p>
 </form>
 </body>
 </html>
