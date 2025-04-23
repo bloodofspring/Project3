@@ -2,8 +2,9 @@ import datetime
 import os
 
 from dotenv import load_dotenv
-from flask import Flask, render_template, redirect, url_for, request, session, flash
+from flask import Flask, render_template, redirect, url_for, request, session, flash, jsonify
 from werkzeug.utils import secure_filename
+import random
 
 import api
 import database
@@ -56,7 +57,15 @@ def main():
         print(f"Cannot get posts of user {user.login}: {e}")
 
 
-    return render_template("main.html", dudes= [1, 2, 3], user=user, posts_count=len(posts_from_user))
+    try:
+        posts_from_other_users = Post.select().where(Post.author != user)  # ToDo: я просто заменю одну на другую, тк тестировать проще
+    except (Exception,) as e:
+        print(f"Cannot get posts of user {user.login}: {e}")
+
+    lst = [i for i in posts_from_other_users]
+    random.shuffle(lst)
+
+    return render_template("main.html", user=user, posts=posts_from_user)
 
 
 @application.route("/profile")
@@ -239,6 +248,33 @@ def create_post():
     except Exception as e:
         print(f"Error creating post: {e}")
         return redirect(url_for("main"))
+
+
+comments = []
+
+
+@application.route('/add_comment', methods=['POST'])
+def add_comment():
+    data = request.get_json()
+    text = data.get('text', '').strip()
+
+    if not text:
+        return jsonify({'success': False, 'error': 'Пустой комментарий'})
+
+    if len(text) > 255:
+        return jsonify({'success': False, 'error': 'Слишком длинный комментарий'})
+
+    # Просто сохраняем в список
+    comments.append({
+        'text': text,
+        'user': data.get('user', 'Аноним'),
+        'time': 'Только что'
+    })
+
+    return jsonify({
+        'success': True,
+        'message': f'Комментарий #{len(comments)} сохранен!'
+    })
 
 
 @application.route('/success')

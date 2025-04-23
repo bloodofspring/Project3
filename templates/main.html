@@ -76,6 +76,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
 
     <!-- Plugins CSS -->
     <link rel="stylesheet" type="text/css" href="static/css/main.css">
@@ -402,7 +406,7 @@ Header END -->
                 <!-- Share feed END -->
 
                 <!-- Card feed item START -->
-                {% for item in dudes%}
+                {% for post in posts%}
                 <div class="card">
                     <!-- Card header START -->
                     <div class="card-header border-0 pb-0">
@@ -411,12 +415,14 @@ Header END -->
                                 <!-- Avatar -->
                                 <div class="avatar avatar-story me-2">
                                     <a href="#!"> <img class="avatar-img rounded-circle"
-                                                       src="static/images/empty_profile.png" alt=""> </a>
+                                                       src="{{  post.author.profile_data.profile_photo.get_full_path()  }}"
+                                                       alt=""> </a>
                                 </div>
                                 <!-- Info -->
                                 <div>
                                     <div class="nav nav-divider">
-                                        <h6 class="nav-item card-title mb-0"><a href="#!"> Lori Ferguson </a></h6>
+                                        <h6 class="nav-item card-title mb-0"><p> {{ post.author.profile_data.first_name
+                                            + " " + post.author.profile_data.last_name }} </p></h6>
 
                                     </div>
                                 </div>
@@ -429,45 +435,83 @@ Header END -->
                     <!-- Card header END -->
                     <!-- Card body START -->
                     <div class="card-body">
-                        <p>I'm thrilled to share that I've completed a graduate certificate course in project management
-                            with the president's honor roll.</p>
+                        {% if post.text != None %}
+                        <p>{{ post.text }}</p>
+                        {% else %}
+                        <p></p>
+                        {% endif %}
                         <!-- Card img -->
-                        <!--						<img class="card-img" src="assets/images/post/3by2/01.jpg" alt="Post">-->
-                        <!-- Feed react START -->
 
-                        <!-- Feed react END -->
+                        <img class="card-img" src="{{  post.get_first_file_path()  }}" alt="Post">
+                        <p></p>
 
                         <!-- Add comment -->
                         <div class="d-flex mb-3">
                             <!-- Avatar -->
                             <div class="avatar avatar-xs me-2">
-                                <a href="#!"> <img class="avatar-img rounded-circle"
-                                                   src="static/images/empty_profile.png" alt=""> </a>
+                                <img class="avatar-img rounded-circle" src="{{ user.profile_data.profile_photo.get_full_path() }}" alt="">
                             </div>
-                            <!-- Comment box  -->
-                            <form class="nav nav-item w-100 position-relative">
-                                <textarea data-autoresize="" class="form-control pe-5 bg-light" rows="1"
-                                          placeholder="Add a comment..."></textarea>
-                                <button class="nav-link bg-transparent px-3 position-absolute top-50 end-0 translate-middle-y border-0"
-                                        type="submit">
-                                    <i class="bi bi-send-fill"> </i>
-                                </button>
+                            <!-- Comment box with fixed height and send button -->
+                            <form id="commentForm" class="position-relative flex-grow-1">
+                                <div class="input-group" style="height: 38px;">
+                                    <input type="text" id="commentText" class="form-control border-end-0"
+                                           placeholder="Напишите комментарий..." maxlength="255"
+                                           style="resize: none; height: 100%; border-radius: 20px 0 0 20px;">
+                                    <button type="submit" class="btn btn-primary border-start-0"
+                                            style="border-radius: 0 20px 20px 0; height: 100%;" disabled>
+                                        <i class="bi bi-send-fill"></i>
+                                    </button>
+                                </div>
                             </form>
                         </div>
-                        <!-- Comment wrap START -->
-                        <ul class="comment-wrap list-unstyled">
-                            <!-- Comment item START -->
-                            <!-- Comment item END -->
-                            <!-- Comment item START -->
 
-                            <!-- Comment item END -->
-                        </ul>
-                        <!-- Load more replies -->
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const textInput = document.getElementById('commentText');
+                                const submitButton = document.querySelector('#commentForm button');
+                                const form = document.getElementById('commentForm');
 
-                        <!-- Comment item nested END -->
-                        </li>
-                        <!-- Comment item END -->
-                        <!-- Comment item START -->
+                                // Активируем/деактивируем кнопку
+                                textInput.addEventListener('input', function() {
+                                    submitButton.disabled = this.value.trim().length === 0;
+                                });
+
+                                // Обработка отправки
+                                form.addEventListener('submit', function(e) {
+                                    e.preventDefault();
+                                    const commentText = textInput.value.trim();
+
+                                    if (commentText) {
+                                        // Здесь код отправки на сервер
+                                        fetch('/add_comment', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                            },
+                                            body: JSON.stringify({
+                                                text: commentText,
+                                                user: 'Ученик'
+                                            })
+                                        })
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            if (data.success) {
+                                                // Очищаем поле ввода после успешной отправки
+                                                textInput.value = '';
+                                                submitButton.disabled = true;
+
+                                                // Можно добавить уведомление
+                                                console.log('Комментарий отправлен:', data);
+                                            }
+                                        })
+                                        .catch(error => {
+                                            console.error('Ошибка:', error);
+                                        });
+                                    }
+                                });
+                            });
+                        </script>
+
                         <li class="comment-item">
                             {% for item in dudes%}
                             <div class="d-flex">
@@ -486,7 +530,7 @@ Header END -->
                                         <p class="small mb-0">Removed demands expense account in outward tedious do.
                                             Particular way thoroughly unaffected projection.</p>
                                     </div>
-                                    <p> </p>
+                                    <p></p>
 
 
                                 </div>
