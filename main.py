@@ -10,7 +10,7 @@ import api
 import database
 import util
 from database.create import init_db
-from database.models import UserProfile, AppUser, FileMeta, Post, PostsToMedia
+from database.models import UserProfile, AppUser, FileMeta, Post, PostsToMedia, Comments
 
 import logging
 
@@ -250,37 +250,31 @@ def create_post():
         return redirect(url_for("main"))
 
 
-comments = []
-
-
 @application.route('/add_comment', methods=['POST'])
 def add_comment():
     data = request.get_json()
-    text = data.get('text', '').strip()
+    text = data.get('text', None)
 
-    if not text:
-        return jsonify({'success': False, 'error': 'Пустой комментарий'})
+    if text is None:
+        return redirect(url_for("main"))
 
-    if len(text) > 255:
-        return jsonify({'success': False, 'error': 'Слишком длинный комментарий'})
+    try:
+        user = AppUser.select().where(AppUser.login == session["user"])[0]
 
-    # Просто сохраняем в список
-    comments.append({
-        'text': text,
-        'user': data.get('user', 'Аноним'),
-        'time': 'Только что'
-    })
+        post = Post.get_by_id(data.get('post_id'))
+        if not post:
+            raise Exception("Post not found")
 
-    return jsonify({
-        'success': True,
-        'message': f'Комментарий #{len(comments)} сохранен!'
-    })
+        Comments.create(
+            post=post,
+            author=user,
+            text=text,
+        )
+    except Exception as e:
+        print(f"An error while creating comment: {e}")
+        return redirect(url_for("main"))
 
-
-@application.route('/success')
-def success():
-    return "Регистрация прошла успешно!"
-
+    return redirect(url_for("main"))
 
 def main():
     init_db()
