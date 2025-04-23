@@ -407,6 +407,9 @@ Header END -->
 
                 <!-- Card feed item START -->
                 {% for post in posts%}
+                <form id="commentForm1" class="position-relative flex-grow-1" data-post-id="{{ post.id }}">
+                    <!-- ... остальные поля формы ... -->
+                </form>
                 <div class="card">
                     <!-- Card header START -->
                     <div class="card-header border-0 pb-0">
@@ -449,7 +452,8 @@ Header END -->
                         <div class="d-flex mb-3">
                             <!-- Avatar -->
                             <div class="avatar avatar-xs me-2">
-                                <img class="avatar-img rounded-circle" src="{{ user.profile_data.profile_photo.get_full_path() }}" alt="">
+                                <img class="avatar-img rounded-circle"
+                                     src="{{ user.profile_data.profile_photo.get_full_path() }}" alt="">
                             </div>
                             <!-- Comment box with fixed height and send button -->
                             <form id="commentForm" class="position-relative flex-grow-1">
@@ -468,21 +472,24 @@ Header END -->
                         <script>
                             document.addEventListener('DOMContentLoaded', function() {
                                 const textInput = document.getElementById('commentText');
-                                const submitButton = document.querySelector('#commentForm button');
-                                const form = document.getElementById('commentForm');
+                                const submitButton = document.querySelector('#commentForm1 button');
+                                const form = document.getElementById('commentForm1');
 
-                                // Активируем/деактивируем кнопку
+
                                 textInput.addEventListener('input', function() {
                                     submitButton.disabled = this.value.trim().length === 0;
                                 });
 
-                                // Обработка отправки
+
                                 form.addEventListener('submit', function(e) {
                                     e.preventDefault();
                                     const commentText = textInput.value.trim();
 
                                     if (commentText) {
-                                        // Здесь код отправки на сервер
+                                        // Получаем ID поста из атрибута data-post-id формы
+                                        const postId = form.getAttribute('data-post-id');
+
+
                                         fetch('/add_comment', {
                                             method: 'POST',
                                             headers: {
@@ -490,17 +497,15 @@ Header END -->
                                             },
                                             body: JSON.stringify({
                                                 text: commentText,
-                                                user: 'Ученик'
+                                                user: 'Ученик',
+                                                post_id: postId  // Добавляем ID поста в отправляемые данные
                                             })
                                         })
                                         .then(response => response.json())
                                         .then(data => {
                                             if (data.success) {
-                                                // Очищаем поле ввода после успешной отправки
                                                 textInput.value = '';
                                                 submitButton.disabled = true;
-
-                                                // Можно добавить уведомление
                                                 console.log('Комментарий отправлен:', data);
                                             }
                                         })
