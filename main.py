@@ -36,7 +36,7 @@ def main():
     try:
         user = AppUser.select().where(AppUser.login == session['user'])[0]
     except IndexError:
-        return f"Пользователя с ником {session['user']} не существует", 404
+        return redirect(url_for("login"))
     try:
         posts_from_user = Post.select().where(Post.author == user)
     except (Exception,) as e:
