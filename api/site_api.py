@@ -182,6 +182,9 @@ def upload_post():
         with database.connect_to_database():
             author = AppUser.select().where(AppUser.login == flask.request.form.get('login'))[0]
 
+            if author.is_banned:
+                return "Доступ запрещен. Ваш аккаунт заблокирован.", 403
+
             post = Post.create(
                 author=author,
                 text=flask.request.form.get('text')

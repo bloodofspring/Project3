@@ -37,6 +37,10 @@ def main():
         user = AppUser.select().where(AppUser.login == session['user'])[0]
     except IndexError:
         return redirect(url_for("login"))
+
+    if user.is_banned:
+        return "Доступ запрещен. Ваш аккаунт заблокирован.", 403
+
     try:
         posts_from_user = Post.select().where(Post.author == user)
     except (Exception,) as e:
@@ -61,7 +65,10 @@ def profile():
     try:
         user = AppUser.select().where(AppUser.login == session['user'])[0]
     except IndexError:
-        return f"Пользователя с ником {session['user']} не существует", 404
+        return redirect(url_for("login"))
+
+    if user.is_banned:
+        return "Доступ запрещен. Ваш аккаунт заблокирован.", 403
 
     return render_template("profile.html", user=user)
 
@@ -152,6 +159,9 @@ def login():
             print("Пользователь не найден")
             return render_template('login.html', error="Неверный логин или пароль")
 
+        if user[0].is_banned:
+            return "Доступ запрещен. Ваш аккаунт заблокирован.", 403
+
         if user[0].password == util.hash_password(password):
             session['user'] = username
             print(f"Успешный вход, перенаправляю на {url_for('main')}")
@@ -166,9 +176,6 @@ def login():
 @application.route('/about')
 def about():
     return render_template('about.html')
-    about_text = request.form.get('about_text')
-    print(about_text)
-
 
 @application.route('/save-about', methods=['POST'])
 def save_about():
@@ -180,7 +187,10 @@ def save_about():
     try:
         user: AppUser = AppUser.select().where(AppUser.login == session['user'])[0]
     except IndexError:
-        return f"Пользователя с ником {session['user']} не существует", 404
+        return redirect(url_for("login"))
+
+    if user.is_banned:
+        return "Доступ запрещен. Ваш аккаунт заблокирован.", 403
 
     with database.connect_to_database():
         user.profile_data.about = about_text
@@ -214,6 +224,9 @@ def create_post():
         with database.connect_to_database():
             user = AppUser.select().where(AppUser.login == session["user"])[0]
 
+            if user.is_banned:
+                return "Доступ запрещен. Ваш аккаунт заблокирован.", 403
+
             new_post = Post(
                 author=user,
                 text=post_text,
@@ -246,6 +259,9 @@ def add_comment():
     try:
         user = AppUser.select().where(AppUser.login == session["user"])[0]
 
+        if user.is_banned:
+            return "Доступ запрещен. Ваш аккаунт заблокирован.", 403
+
         post = Post.get_by_id(data.get('post_id'))
         if not post:
             raise Exception("Post not found")
@@ -261,11 +277,12 @@ def add_comment():
 
     return redirect(url_for("main"))
 
-def main():
+
+def run():
     init_db()
     application.register_blueprint(api.blueprint)
     application.run(debug=True)
 
 
 if __name__ == '__main__':
-    main()
+    run()

@@ -35,6 +35,7 @@ class AppUser(BaseModel):
     login = CharField(null=False, max_length=32)
     password = CharField(null=False)  # password hash
     profile_data = ForeignKeyField(UserProfile, backref="user", null=False)
+    is_banned = BooleanField(default=False, null=False)
 
     def dict(self):
         return {
