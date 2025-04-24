@@ -26,21 +26,8 @@ application.config['SECRET_KEY'] = os.environ["app_secret_key"]
 application.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Максимальный размер загружаемых файлов
 application.config['ALLOWED_EXTENSIONS'] = {".jpg", ".jpeg", ".png"}
 
-# login_manager = LoginManager()
-# login_manager.init_app(application)
-
-
-# @login_manager.user_loader
-# def load_user(user_id):
-#     db_sess = db_session.create_session()
-#     return db_sess.query(User).get(user_id)
-
 
 @application.route("/")
-def index():
-    return render_template("index.html")
-
-
 @application.route("/main")
 def main():
     if 'user' not in session:
