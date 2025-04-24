@@ -27,12 +27,7 @@ application.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Максимал�
 application.config['ALLOWED_EXTENSIONS'] = {".jpg", ".jpeg", ".png"}
 
 
-
 @application.route("/")
-def index():
-    return render_template("index.html")
-
-
 @application.route("/main")
 def main():
     if 'user' not in session:
