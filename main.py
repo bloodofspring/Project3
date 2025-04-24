@@ -27,12 +27,7 @@ application.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Максимал�
 application.config['ALLOWED_EXTENSIONS'] = {".jpg", ".jpeg", ".png"}
 
 
-
 @application.route("/")
-def index():
-    return render_template("index.html")
-
-
 @application.route("/main")
 def main():
     if 'user' not in session:
@@ -42,20 +37,22 @@ def main():
         user = AppUser.select().where(AppUser.login == session['user'])[0]
     except IndexError:
         return f"Пользователя с ником {session['user']} не существует", 404
+
     try:
         posts_from_user = Post.select().where(Post.author == user)
     except (Exception,) as e:
         print(f"Cannot get posts of user {user.login}: {e}")
-        posts_from_user = []
 
 
     try:
-        posts_from_other_users = Post.select().where(Post.author != user)
+        posts_from_other_users = Post.select().where(Post.author != user)  # ToDo: я просто заменю одну на другую, тк тестировать проще
     except (Exception,) as e:
-        posts_from_other_users = []
         print(f"Cannot get posts of user {user.login}: {e}")
 
-    return render_template("main.html", user=user, posts_count=len(posts_from_user), posts=posts_from_other_users)
+    lst = [i for i in posts_from_other_users]
+    random.shuffle(lst)
+
+    return render_template("main.html", user=user, posts=posts_from_user)
 
 
 @application.route("/profile")
@@ -105,7 +102,7 @@ def register():
                 last_name=request.form['last_name'],
                 profile_photo=file_meta,
                 birth_date=datetime.datetime(
-                    year=int(request.form['birth_date'].split("-")[0]) % 10000,
+                    year=int(request.form['birth_date'].split("-")[0]),
                     month=int(request.form['birth_date'].split("-")[1]),
                     day=int(request.form['birth_date'].split("-")[2]),
                 ),
